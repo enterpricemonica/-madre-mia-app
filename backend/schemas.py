@@ -60,3 +60,7 @@ class OrderOut(BaseModel):
     items: List[OrderItemOut] = []
     class Config:
         from_attributes = True
+
+# ── ORDER STATUS UPDATE ──
+class OrderStatusUpdate(BaseModel):
+    status: str

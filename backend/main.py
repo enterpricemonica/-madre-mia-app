@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
 import models
-from routers import menu, tables
+from routers import menu, tables, orders
 
 # Automatically create all tables in PostgreSQL
 Base.metadata.create_all(bind=engine)
@@ -21,6 +21,7 @@ app.add_middleware(
 # --- ROUTER REGISTRATION ---
 app.include_router(menu.router)
 app.include_router(tables.router)
+app.include_router(orders.router)
 
 @app.get("/")
 def root():
