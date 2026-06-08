@@ -3,49 +3,50 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
 
-class Mesa(Base):
-    __tablename__ = "mesas"
 
-    id         = Column(Integer, primary_key=True, index=True)
-    numero     = Column(Integer, unique=True, nullable=False)
-    qr_code    = Column(String, nullable=True)
-    activa     = Column(Boolean, default=True)
+class Table(Base):
+    __tablename__ = "tables"
 
-    pedidos    = relationship("Pedido", back_populates="mesa")
+    id      = Column(Integer, primary_key=True, index=True)
+    number  = Column(Integer, unique=True, nullable=False)
+    qr_code = Column(String, nullable=True)
+    active  = Column(Boolean, default=True)
+
+    orders  = relationship("Order", back_populates="table")
 
 
 class MenuItem(Base):
     __tablename__ = "menu_items"
 
     id          = Column(Integer, primary_key=True, index=True)
-    nombre      = Column(String, nullable=False)
-    descripcion = Column(String, nullable=True)
-    precio      = Column(Integer, nullable=False)
-    categoria   = Column(String, nullable=False)
-    disponible  = Column(Boolean, default=True)
+    name        = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    price       = Column(Integer, nullable=False)
+    category    = Column(String, nullable=False)
+    available   = Column(Boolean, default=True)
 
 
-class Pedido(Base):
-    __tablename__ = "pedidos"
+class Order(Base):
+    __tablename__ = "orders"
 
     id         = Column(Integer, primary_key=True, index=True)
-    mesa_id    = Column(Integer, ForeignKey("mesas.id"))
-    estado     = Column(String, default="recibido")
+    table_id   = Column(Integer, ForeignKey("tables.id"))
+    status     = Column(String, default="received")
     total      = Column(Integer, default=0)
-    creado_en  = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
-    mesa       = relationship("Mesa", back_populates="pedidos")
-    items      = relationship("PedidoItem", back_populates="pedido")
+    table      = relationship("Table", back_populates="orders")
+    items      = relationship("OrderItem", back_populates="order")
 
 
-class PedidoItem(Base):
-    __tablename__ = "pedido_items"
+class OrderItem(Base):
+    __tablename__ = "order_items"
 
-    id         = Column(Integer, primary_key=True, index=True)
-    pedido_id  = Column(Integer, ForeignKey("pedidos.id"))
-    item_id    = Column(Integer, ForeignKey("menu_items.id"))
-    cantidad   = Column(Integer, default=1)
-    notas      = Column(String, nullable=True)
+    id        = Column(Integer, primary_key=True, index=True)
+    order_id  = Column(Integer, ForeignKey("orders.id"))
+    item_id   = Column(Integer, ForeignKey("menu_items.id"))
+    quantity  = Column(Integer, default=1)
+    notes     = Column(String, nullable=True)
 
-    pedido     = relationship("Pedido", back_populates="items")
-    item       = relationship("MenuItem")
+    order     = relationship("Order", back_populates="items")
+    item      = relationship("MenuItem")

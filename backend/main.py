@@ -2,14 +2,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
 import models
-from routers import menu
+from routers import menu, tables
 
-# Crear todas las tablas
+# Automatically create all tables in PostgreSQL
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Madre Mia API", version="1.0")
 
-# CORS
+# CORS — allow external connections (e.g. the customer's phone) during development
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,9 +18,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routers
+# --- ROUTER REGISTRATION ---
 app.include_router(menu.router)
+app.include_router(tables.router)
 
 @app.get("/")
 def root():
-    return {"mensaje": "Bienvenido a Madre Mia API 🫓"}
+    return {"message": "Welcome to Madre Mia API 🫓"}

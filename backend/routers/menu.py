@@ -6,54 +6,54 @@ from typing import List
 
 router = APIRouter(prefix="/menu", tags=["Menu"])
 
-# GET /menu — obtener todos los items del menu
+# GET /menu — get all available menu items
 @router.get("/", response_model=List[schemas.MenuItemOut])
-def obtener_menu(db: Session = Depends(get_db)):
+def get_menu(db: Session = Depends(get_db)):
     return db.query(models.MenuItem).filter(
-        models.MenuItem.disponible == True
+        models.MenuItem.available == True
     ).all()
 
-# GET /menu/{id} — obtener un item especifico
+# GET /menu/{id} — get a single item
 @router.get("/{item_id}", response_model=schemas.MenuItemOut)
-def obtener_item(item_id: int, db: Session = Depends(get_db)):
+def get_item(item_id: int, db: Session = Depends(get_db)):
     item = db.query(models.MenuItem).filter(
         models.MenuItem.id == item_id
     ).first()
     if not item:
-        raise HTTPException(status_code=404, detail="Item no encontrado")
+        raise HTTPException(status_code=404, detail="Item not found")
     return item
 
-# POST /menu — crear un item nuevo
+# POST /menu — create a new item
 @router.post("/", response_model=schemas.MenuItemOut)
-def crear_item(item: schemas.MenuItemCreate, db: Session = Depends(get_db)):
-    nuevo = models.MenuItem(**item.model_dump())
-    db.add(nuevo)
+def create_item(item: schemas.MenuItemCreate, db: Session = Depends(get_db)):
+    new_item = models.MenuItem(**item.model_dump())
+    db.add(new_item)
     db.commit()
-    db.refresh(nuevo)
-    return nuevo
+    db.refresh(new_item)
+    return new_item
 
-# PUT /menu/{id} — actualizar un item
+# PUT /menu/{id} — update an item
 @router.put("/{item_id}", response_model=schemas.MenuItemOut)
-def actualizar_item(item_id: int, item: schemas.MenuItemCreate, db: Session = Depends(get_db)):
+def update_item(item_id: int, item: schemas.MenuItemCreate, db: Session = Depends(get_db)):
     db_item = db.query(models.MenuItem).filter(
         models.MenuItem.id == item_id
     ).first()
     if not db_item:
-        raise HTTPException(status_code=404, detail="Item no encontrado")
+        raise HTTPException(status_code=404, detail="Item not found")
     for key, value in item.model_dump().items():
         setattr(db_item, key, value)
     db.commit()
     db.refresh(db_item)
     return db_item
 
-# DELETE /menu/{id} — eliminar un item
+# DELETE /menu/{id} — delete an item
 @router.delete("/{item_id}")
-def eliminar_item(item_id: int, db: Session = Depends(get_db)):
+def delete_item(item_id: int, db: Session = Depends(get_db)):
     item = db.query(models.MenuItem).filter(
         models.MenuItem.id == item_id
     ).first()
     if not item:
-        raise HTTPException(status_code=404, detail="Item no encontrado")
+        raise HTTPException(status_code=404, detail="Item not found")
     db.delete(item)
     db.commit()
-    return {"mensaje": "Item eliminado"}
+    return {"message": "Item deleted"}

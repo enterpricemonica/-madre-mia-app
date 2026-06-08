@@ -1,0 +1,31 @@
+# ─── Secrets / environment ───
+# Never commit credentials. These hold your DB password & secret key.
+.env
+*.env
+!.env.example
+
+# ─── Python ───
+__pycache__/
+*.py[cod]
+*.so
+
+# ─── Virtual environment ───
+# The venv is huge and machine-specific. Rebuild it from requirements.txt instead.
+.venv/
+venv/
+env/
+
+# ─── Generated output ───
+# QR images are regenerated on demand; no need to track them.
+qr_codes/
+
+# ─── OS / editor noise ───
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ─── Node / frontend (for when we add the React PWA) ───
+node_modules/
+dist/
+.vite/
