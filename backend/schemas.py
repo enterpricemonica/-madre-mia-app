@@ -41,6 +41,7 @@ class OrderItemCreate(BaseModel):
 class OrderItemOut(BaseModel):
     id: int
     item_id: int
+    name: Optional[str] = None  # nombre del plato (lo trae la propiedad del modelo)
     quantity: int
     notes: Optional[str] = None
     class Config:

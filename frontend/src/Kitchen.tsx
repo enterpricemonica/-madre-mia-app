@@ -1,0 +1,98 @@
+import { useState, useEffect } from 'react'
+import './Kitchen.css'
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
+// La forma de un pedido y sus items (coincide con el backend)
+interface OrderItem {
+  id: number
+  item_id: number
+  name: string | null
+  quantity: number
+  notes: string | null
+}
+interface Order {
+  id: number
+  table_id: number
+  status: string
+  total: number
+  created_at: string
+  items: OrderItem[]
+}
+
+// Para cada estado: cuál es el siguiente y qué texto va en el botón.
+const NEXT_STATUS: Record<string, { next: string; label: string }> = {
+  received: { next: 'preparing', label: 'Empezar a preparar' },
+  preparing: { next: 'ready', label: 'Marcar listo' },
+  ready: { next: 'delivered', label: 'Marcar entregado' },
+}
+
+function Kitchen() {
+  const [orders, setOrders] = useState<Order[]>([])
+
+  // Pide los pedidos al backend
+  function loadOrders() {
+    fetch(`${API_URL}/orders/`)
+      .then((r) => r.json())
+      .then((data: Order[]) => setOrders(data))
+  }
+
+  // Al cargar: trae los pedidos YA, y luego repite cada 5 segundos (polling).
+  useEffect(() => {
+    loadOrders()
+    const interval = setInterval(loadOrders, 5000)
+    return () => clearInterval(interval) // limpiar el intervalo al salir
+  }, [])
+
+  // Avanzar el estado de un pedido y recargar
+  function advance(orderId: number, nextStatus: string) {
+    fetch(`${API_URL}/orders/${orderId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: nextStatus }),
+    }).then(() => loadOrders())
+  }
+
+  // Solo pedidos activos (no entregados ni pagados), del más viejo al más nuevo
+  const activeOrders = orders
+    .filter((o) => o.status !== 'delivered' && o.status !== 'paid')
+    .sort((a, b) => a.id - b.id)
+
+  return (
+    <div className="kitchen">
+      <h1>🍳 Cocina — Madre Mía</h1>
+
+      {activeOrders.length === 0 && (
+        <p className="empty">No hay pedidos pendientes</p>
+      )}
+
+      <div className="orders">
+        {activeOrders.map((order) => (
+          <div key={order.id} className={`order-card status-${order.status}`}>
+            <div className="order-head">
+              <strong>Mesa {order.table_id}</strong>
+              <span className="badge">{order.status}</span>
+            </div>
+            <ul>
+              {order.items.map((it) => (
+                <li key={it.id}>
+                  {it.quantity}× {it.name}
+                  {it.notes && <em> ({it.notes})</em>}
+                </li>
+              ))}
+            </ul>
+            {NEXT_STATUS[order.status] && (
+              <button
+                onClick={() => advance(order.id, NEXT_STATUS[order.status].next)}
+              >
+                {NEXT_STATUS[order.status].label}
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default Kitchen

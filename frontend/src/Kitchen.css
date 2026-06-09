@@ -1,0 +1,88 @@
+.kitchen {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px;
+}
+.kitchen h1 {
+  text-align: center;
+}
+.empty {
+  text-align: center;
+  color: var(--muted);
+  margin-top: 40px;
+  font-size: 18px;
+}
+
+/* Cuadrícula de pedidos */
+.orders {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.order-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: var(--shadow);
+  border-left: 6px solid var(--border); /* franja de color por estado */
+}
+
+/* Color de la franja según el estado */
+.order-card.status-received {
+  border-left-color: #e07a3f;
+}
+.order-card.status-preparing {
+  border-left-color: #e0b13f;
+}
+.order-card.status-ready {
+  border-left-color: #2e9e5b;
+}
+
+.order-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.order-head strong {
+  font-size: 18px;
+}
+.badge {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--bg);
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+
+.order-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+}
+.order-card li {
+  padding: 3px 0;
+}
+.order-card em {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.order-card button {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.order-card button:hover {
+  background: var(--accent-dark);
+}

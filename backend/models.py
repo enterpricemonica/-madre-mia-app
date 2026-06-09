@@ -50,3 +50,9 @@ class OrderItem(Base):
 
     order     = relationship("Order", back_populates="items")
     item      = relationship("MenuItem")
+
+    # Propiedad: el nombre del plato (leído desde la relación con MenuItem).
+    # Así la cocina ve "Vegetariana" en vez de solo "item 14".
+    @property
+    def name(self):
+        return self.item.name if self.item else None
