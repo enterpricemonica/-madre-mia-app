@@ -11,15 +11,21 @@ interface MenuItem {
   available: boolean
 }
 
-// Mesa temporal. Más adelante (con el QR) vendrá del número de la URL.
-const TABLE_ID = 1
+function getTableNumberFromUrl() {
+  const match = window.location.pathname.match(/\/table\/(\d+)/)
+  return match ? Number(match[1]) : 1
+}
 
 function App() {
+  const tableNumber = getTableNumberFromUrl()
   const [menu, setMenu] = useState<MenuItem[]>([])
 
   // El carrito: un objeto que relaciona el id del item -> cantidad.
   // Ejemplo: { 2: 3, 4: 1 } = 3 arepas (id 2) y 1 bandeja (id 4).
   const [cart, setCart] = useState<Record<number, number>>({})
+
+  // El id interno de la mesa (lo necesita el pedido). null = todavía no cargado.
+  const [tableId, setTableId] = useState<number | null>(null)
 
   // Traer el menú al cargar la pantalla
   useEffect(() => {
@@ -27,6 +33,14 @@ function App() {
       .then((response) => response.json())
       .then((data: MenuItem[]) => setMenu(data))
   }, [])
+
+  // Traducir el NÚMERO de la mesa (de la URL) a su ID interno,
+  // usando el endpoint /tables/by-number que construiste.
+  useEffect(() => {
+    fetch(`http://localhost:8000/tables/by-number/${tableNumber}`)
+      .then((response) => response.json())
+      .then((table) => setTableId(table.id ?? null)) // si no existe, queda null
+  }, [tableNumber])
 
   // Agregar 1 unidad de un item al carrito
   function addToCart(itemId: number) {
@@ -51,13 +65,19 @@ function App() {
 
   // Enviar el pedido al backend (POST /orders)
   function sendOrder() {
+    // Si todavía no sabemos el id de la mesa (o el QR es inválido), no enviamos.
+    if (tableId === null) {
+      alert('No se reconoció la mesa. Revisa el código QR.')
+      return
+    }
+
     const items = Object.entries(cart).map(([itemId, quantity]) => ({
       item_id: Number(itemId),
       quantity: Number(quantity),
     }))
 
     const payload = {
-      table_id: TABLE_ID,
+      table_id: tableId, // 👈 el ID interno, no el número
       items,
     }
 
@@ -81,7 +101,7 @@ function App() {
     <div className="app">
       <header className="header">
         <h1>Madre Mía 🫓</h1>
-        <p className="subtitle">Mesa {TABLE_ID}</p>
+        <p className="subtitle">Mesa {tableNumber}</p>
       </header>
 
       <main className="menu">

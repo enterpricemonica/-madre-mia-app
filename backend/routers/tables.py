@@ -13,6 +13,14 @@ router = APIRouter(prefix="/tables", tags=["Tables"])
 def get_tables(db: Session = Depends(get_db)):
     return db.query(models.Table).all()
 
+# GET /tables/by-number/{number} — search a table by visible number
+@router.get("/by-number/{number}", response_model=schemas.TableOut)
+def get_table_by_number(number: int, db: Session = Depends(get_db)):
+    table = db.query(models.Table).filter(models.Table.number == number).first()
+    if not table:
+        raise HTTPException(status_code=404, detail="Table not found")
+    return table
+
 # POST /tables — create a new table
 @router.post("/", response_model=schemas.TableOut)
 def create_table(table: schemas.TableCreate, db: Session = Depends(get_db)):
