@@ -36,15 +36,20 @@ function App() {
     }))
   }
 
-  // Calcular el total: recorremos el menú, y por cada item
-  // multiplicamos su precio por la cantidad que haya en el carrito.
+  // Calcular total y cantidad de items recorriendo el menú
   let total = 0
+  let itemCount = 0
   for (const item of menu) {
-    const quantity = cart[item.id] || 0 // si no está en el carrito, 0
+    const quantity = cart[item.id] || 0
     total += item.price * quantity
+    itemCount += quantity
   }
 
-  // 🚀 TU MISIÓN: enviar el pedido al backend (POST /orders)
+  // Lista de categorías únicas (Entradas, Platos fuertes, Bebidas...)
+  // new Set() elimina los repetidos; el [...] lo vuelve lista de nuevo.
+  const categories = [...new Set(menu.map((item) => item.category))]
+
+  // Enviar el pedido al backend (POST /orders)
   function sendOrder() {
     const items = Object.entries(cart).map(([itemId, quantity]) => ({
       item_id: Number(itemId),
@@ -73,36 +78,55 @@ function App() {
   }
 
   return (
-    <div>
-      <h1>Madre Mía 🫓</h1>
+    <div className="app">
+      <header className="header">
+        <h1>Madre Mía 🫓</h1>
+        <p className="subtitle">Mesa {TABLE_ID}</p>
+      </header>
 
-      {/* ── El menú ── */}
-      <ul>
-        {menu.map((item) => (
-          <li key={item.id}>
-            {item.name} — ${item.price.toLocaleString('es-CO')}{' '}
-            <button onClick={() => addToCart(item.id)}>Agregar</button>
-          </li>
+      <main className="menu">
+        {categories.map((category) => (
+          <section key={category}>
+            <h2 className="category-title">{category}</h2>
+            {menu
+              .filter((item) => item.category === category)
+              .map((item) => (
+                <article key={item.id} className="card">
+                  <div className="card-info">
+                    <h3 className="card-name">{item.name}</h3>
+                    {item.description && (
+                      <p className="card-desc">{item.description}</p>
+                    )}
+                    <p className="card-price">
+                      ${item.price.toLocaleString('es-CO')}
+                    </p>
+                  </div>
+                  <button
+                    className="add-btn"
+                    onClick={() => addToCart(item.id)}
+                  >
+                    {cart[item.id] ? `${cart[item.id]}  +` : '+'}
+                  </button>
+                </article>
+              ))}
+          </section>
         ))}
-      </ul>
+      </main>
 
-      {/* ── Tu pedido ── */}
-      <h2>Tu pedido</h2>
-      <ul>
-        {menu
-          .filter((item) => cart[item.id] > 0) // solo los que tienen cantidad
-          .map((item) => (
-            <li key={item.id}>
-              {item.name} x {cart[item.id]}
-            </li>
-          ))}
-      </ul>
-      <p>
-        <strong>Total: ${total.toLocaleString('es-CO')}</strong>
-      </p>
-
-      {/* El botón solo aparece si hay algo en el carrito (total > 0) */}
-      {total > 0 && <button onClick={sendOrder}>Enviar pedido</button>}
+      {/* Barra fija abajo: solo aparece si hay algo en el carrito */}
+      {total > 0 && (
+        <footer className="cart-bar">
+          <div className="cart-bar-info">
+            <span className="cart-count">
+              {itemCount} {itemCount === 1 ? 'producto' : 'productos'}
+            </span>
+            <span className="cart-total">${total.toLocaleString('es-CO')}</span>
+          </div>
+          <button className="send-btn" onClick={sendOrder}>
+            Enviar pedido
+          </button>
+        </footer>
+      )}
     </div>
   )
 }
