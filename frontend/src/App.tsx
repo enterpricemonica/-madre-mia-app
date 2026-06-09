@@ -16,6 +16,10 @@ function getTableNumberFromUrl() {
   return match ? Number(match[1]) : 1
 }
 
+// URL base del backend. En local: localhost. En producción (Vercel):
+// se define la variable VITE_API_URL con la URL real de Railway.
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 function App() {
   const tableNumber = getTableNumberFromUrl()
   const [menu, setMenu] = useState<MenuItem[]>([])
@@ -29,7 +33,7 @@ function App() {
 
   // Traer el menú al cargar la pantalla
   useEffect(() => {
-    fetch('http://localhost:8000/menu/')
+    fetch(`${API_URL}/menu/`)
       .then((response) => response.json())
       .then((data: MenuItem[]) => setMenu(data))
   }, [])
@@ -37,7 +41,7 @@ function App() {
   // Traducir el NÚMERO de la mesa (de la URL) a su ID interno,
   // usando el endpoint /tables/by-number que construiste.
   useEffect(() => {
-    fetch(`http://localhost:8000/tables/by-number/${tableNumber}`)
+    fetch(`${API_URL}/tables/by-number/${tableNumber}`)
       .then((response) => response.json())
       .then((table) => setTableId(table.id ?? null)) // si no existe, queda null
   }, [tableNumber])
@@ -81,7 +85,7 @@ function App() {
       items,
     }
 
-    fetch('http://localhost:8000/orders/', {
+    fetch(`${API_URL}/orders/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),

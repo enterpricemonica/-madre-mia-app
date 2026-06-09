@@ -6,6 +6,10 @@ from typing import List
 import qrcode
 import os
 
+# URL del frontend (para los QR). En local: localhost; en producción
+# se define la variable FRONTEND_URL con la URL real de Vercel.
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
 router = APIRouter(prefix="/tables", tags=["Tables"])
 
 # GET /tables — list all tables
@@ -40,7 +44,7 @@ def generate_qr(table_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Table not found")
 
     # URL the customer's phone will open
-    url = f"http://localhost:5173/table/{table.number}"
+    url = f"{FRONTEND_URL}/table/{table.number}"
 
     # Generate the QR
     qr = qrcode.QRCode(version=1, box_size=10, border=4)
