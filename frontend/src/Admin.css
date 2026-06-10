@@ -1,0 +1,131 @@
+.admin {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px;
+}
+.admin h1 {
+  text-align: center;
+}
+
+/* Barra superior con título y botón salir */
+.admin-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.logout {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* Pantalla de login */
+.login {
+  max-width: 320px;
+  margin: 80px auto;
+  text-align: center;
+  padding: 0 16px;
+}
+.login input {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 16px;
+}
+.login button {
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 12px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.login-error {
+  color: #c0392b;
+  font-size: 14px;
+}
+
+/* Formulario de agregar */
+.add-form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+}
+.add-form h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+.add-form input {
+  display: block;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 15px;
+}
+.add-form button {
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font-weight: 700;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+/* Tabla de platos */
+.items {
+  width: 100%;
+  border-collapse: collapse;
+}
+.items th,
+.items td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.items th {
+  font-size: 13px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.price-cell input {
+  width: 90px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-right: 6px;
+}
+.items button {
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.items button.del {
+  background: #c0392b;
+}
+/* Fila atenuada si el plato está oculto */
+.hidden-item {
+  opacity: 0.5;
+}

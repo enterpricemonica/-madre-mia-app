@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
+from auth import get_current_user
 import models, schemas
 from typing import List
 
@@ -8,10 +9,13 @@ router = APIRouter(prefix="/menu", tags=["Menu"])
 
 # GET /menu — get all available menu items
 @router.get("/", response_model=List[schemas.MenuItemOut])
-def get_menu(db: Session = Depends(get_db)):
-    return db.query(models.MenuItem).filter(
-        models.MenuItem.available == True
-    ).all()
+def get_menu(available_only: bool = True, db: Session = Depends(get_db)):
+    query = db.query(models.MenuItem)
+
+    if available_only:
+        query = query.filter(models.MenuItem.available == True)
+
+    return query.all()
 
 # GET /menu/{id} — get a single item
 @router.get("/{item_id}", response_model=schemas.MenuItemOut)
@@ -25,7 +29,11 @@ def get_item(item_id: int, db: Session = Depends(get_db)):
 
 # POST /menu — create a new item
 @router.post("/", response_model=schemas.MenuItemOut)
-def create_item(item: schemas.MenuItemCreate, db: Session = Depends(get_db)):
+def create_item(
+    item: schemas.MenuItemCreate,
+    db: Session = Depends(get_db),
+    current_user: str = Depends(get_current_user),
+):
     new_item = models.MenuItem(**item.model_dump())
     db.add(new_item)
     db.commit()
@@ -34,7 +42,12 @@ def create_item(item: schemas.MenuItemCreate, db: Session = Depends(get_db)):
 
 # PUT /menu/{id} — update an item
 @router.put("/{item_id}", response_model=schemas.MenuItemOut)
-def update_item(item_id: int, item: schemas.MenuItemCreate, db: Session = Depends(get_db)):
+def update_item(
+    item_id: int,
+    item: schemas.MenuItemCreate,
+    db: Session = Depends(get_db),
+    current_user: str = Depends(get_current_user),
+):
     db_item = db.query(models.MenuItem).filter(
         models.MenuItem.id == item_id
     ).first()
@@ -48,7 +61,11 @@ def update_item(item_id: int, item: schemas.MenuItemCreate, db: Session = Depend
 
 # DELETE /menu/{id} — delete an item
 @router.delete("/{item_id}")
-def delete_item(item_id: int, db: Session = Depends(get_db)):
+def delete_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: str = Depends(get_current_user),
+):
     item = db.query(models.MenuItem).filter(
         models.MenuItem.id == item_id
     ).first()

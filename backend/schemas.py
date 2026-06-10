@@ -65,3 +65,12 @@ class OrderOut(BaseModel):
 # ── ORDER STATUS UPDATE ──
 class OrderStatusUpdate(BaseModel):
     status: str
+
+# ── AUTH ──
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class TokenOut(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
