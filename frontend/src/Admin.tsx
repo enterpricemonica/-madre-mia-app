@@ -10,9 +10,22 @@ interface MenuItem {
   price: number
   category: string
   available: boolean
+  image_url: string | null
 }
 
-const EMPTY_NEW = { name: '', description: '', price: 0, category: '' }
+const EMPTY_NEW = { name: '', description: '', price: 0, category: '', image_url: '' }
+
+// Los 8 colores del tema (estilo Bootstrap) con su etiqueta
+const THEME_FIELDS = [
+  { key: 'primary', label: 'Principal' },
+  { key: 'secondary', label: 'Secundario' },
+  { key: 'success', label: 'Éxito' },
+  { key: 'danger', label: 'Peligro' },
+  { key: 'warning', label: 'Advertencia' },
+  { key: 'info', label: 'Info' },
+  { key: 'light', label: 'Fondo' },
+  { key: 'dark', label: 'Texto' },
+]
 
 // ── Pantalla de login ──
 // Recibe una función onLogin que se llama con el token cuando el login es exitoso.
@@ -62,6 +75,8 @@ function Admin() {
   )
   const [items, setItems] = useState<MenuItem[]>([])
   const [newItem, setNewItem] = useState(EMPTY_NEW)
+  const [theme, setTheme] = useState<Record<string, string> | null>(null)
+  const [showTheme, setShowTheme] = useState(false) // panel de tema oculto por defecto
 
   // Headers con el token, para las acciones protegidas
   const authHeaders = {
@@ -80,11 +95,48 @@ function Admin() {
       .then((data: MenuItem[]) => setItems(data))
   }
   useEffect(() => {
-    if (token) loadItems()
+    if (token) {
+      loadItems()
+      fetch(`${API_URL}/settings/theme`)
+        .then((r) => r.json())
+        .then(setTheme)
+    }
   }, [token])
+
+  // Cambiar un color del tema: actualiza el estado Y lo aplica en vivo (preview)
+  function changeThemeColor(key: string, value: string) {
+    setTheme((prev) => (prev ? { ...prev, [key]: value } : prev))
+    document.documentElement.style.setProperty(`--${key}`, value) // preview inmediato
+  }
+
+  // Guardar el tema y aplicarlo de inmediato a la pantalla
+  function saveTheme() {
+    if (!theme) return
+    fetch(`${API_URL}/settings/theme`, {
+      method: 'PUT',
+      headers: authHeaders,
+      body: JSON.stringify(theme),
+    })
+      .then((r) => {
+        if (!r.ok) throw new Error('save failed')
+        return r.json()
+      })
+      .then((saved: Record<string, string>) => {
+        const root = document.documentElement
+        for (const [name, value] of Object.entries(saved)) {
+          root.style.setProperty(`--${name}`, value)
+        }
+        alert('Tema guardado ✅')
+      })
+      .catch(() => alert('No se pudo guardar el tema'))
+  }
 
   function changePrice(id: number, price: number) {
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, price } : it)))
+  }
+
+  function changeImage(id: number, image_url: string) {
+    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, image_url } : it)))
   }
 
   function saveItem(item: MenuItem) {
@@ -138,10 +190,39 @@ function Admin() {
     <div className="admin">
       <div className="admin-top">
         <h1>🧑‍🍳 Admin — Madre Mía</h1>
-        <button className="logout" onClick={logout}>
-          Salir
-        </button>
+        <div className="admin-actions">
+          <button
+            className="icon-btn"
+            onClick={() => setShowTheme((s) => !s)}
+            title="Tema (colores)"
+          >
+            🎨
+          </button>
+          <button className="logout" onClick={logout}>
+            Salir
+          </button>
+        </div>
       </div>
+
+      {/* ── Tema (colores) — se muestra solo al tocar el icono 🎨 ── */}
+      {showTheme && theme && (
+        <div className="theme-form">
+          <h2>🎨 Tema (colores)</h2>
+          <div className="theme-grid">
+            {THEME_FIELDS.map((f) => (
+              <label key={f.key} className="theme-field">
+                <span>{f.label}</span>
+                <input
+                  type="color"
+                  value={theme[f.key]}
+                  onChange={(e) => changeThemeColor(f.key, e.target.value)}
+                />
+              </label>
+            ))}
+          </div>
+          <button onClick={saveTheme}>Guardar tema</button>
+        </div>
+      )}
 
       {/* ── Agregar plato ── */}
       <div className="add-form">
@@ -167,6 +248,11 @@ function Admin() {
           value={newItem.category}
           onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
         />
+        <input
+          placeholder="Ruta de la foto (ej: /photos/arepa.jpg)"
+          value={newItem.image_url}
+          onChange={(e) => setNewItem({ ...newItem, image_url: e.target.value })}
+        />
         <button onClick={addItem}>Agregar</button>
       </div>
 
@@ -177,6 +263,7 @@ function Admin() {
             <th>Plato</th>
             <th>Categoría</th>
             <th>Precio</th>
+            <th>Foto</th>
             <th>Estado</th>
             <th></th>
           </tr>
@@ -193,6 +280,14 @@ function Admin() {
                   onChange={(e) => changePrice(item.id, Number(e.target.value))}
                 />
                 <button onClick={() => saveItem(item)}>Guardar</button>
+              </td>
+              <td>
+                <input
+                  className="img-input"
+                  value={item.image_url || ''}
+                  onChange={(e) => changeImage(item.id, e.target.value)}
+                  placeholder="/photos/..."
+                />
               </td>
               <td>
                 <button onClick={() => toggleAvailable(item)}>

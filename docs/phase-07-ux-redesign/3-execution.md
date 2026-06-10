@@ -12,11 +12,12 @@
 - Barra de **chips de categorías** fija debajo del header; al tocar una, hace scroll a esa sección.
 - Resaltar la categoría activa.
 
-## Wave 3 — Fotos (híbrido)
-- Backend: agregar columna `image_url` (nullable) a `MenuItem` + exponerla en schemas.
-- Admin: campo para pegar/seleccionar la URL de la foto.
-- Cliente: mostrar la foto en la tarjeta si existe (bordes redondeados, sombra, `alt` descriptivo).
-- Hosting de imágenes: definir (URL pública; ej. subir a un bucket o usar las de Instagram/Drive).
+## Wave 3 — Fotos (híbrido) ✅ HECHA
+- ✅ Backend: columna `image_url` (nullable) en `MenuItem` + en schemas (`MenuItemBase`).
+- ✅ **Mini-migración** en `main.py` (`ensure_columns()`): `ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS image_url` al arrancar → hace seguro el deploy sin Alembic ni pasos manuales en prod. (Alembic = mejora futura.)
+- ✅ Admin: columna "Foto" con input por plato + campo en el formulario de "agregar".
+- ✅ Cliente: miniatura en la tarjeta si el plato tiene `image_url` (`alt` descriptivo).
+- ✅ **Hosting de fotos:** simple → archivos en `frontend/public/photos/`, servidos gratis por Vercel. El `image_url` es la ruta `/photos/nombre.jpg`. (No requiere bucket externo.)
 
 ## Wave 4 — Pulido
 - Micro-copy ("⭐ Favorito"), animaciones suaves, estados vacíos bonitos.

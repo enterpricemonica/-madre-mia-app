@@ -24,6 +24,7 @@ class MenuItem(Base):
     price       = Column(Integer, nullable=False)
     category    = Column(String, nullable=False)
     available   = Column(Boolean, default=True)
+    image_url   = Column(String, nullable=True)  # ruta/URL de la foto (opcional)
 
 
 class Order(Base):
@@ -64,3 +65,17 @@ class User(Base):
     id              = Column(Integer, primary_key=True, index=True)
     username        = Column(String, unique=True, nullable=False)
     hashed_password = Column(String, nullable=False)
+
+
+class Theme(Base):
+    __tablename__ = "theme"
+
+    id        = Column(Integer, primary_key=True, index=True)  # siempre 1 (fila única)
+    primary   = Column(String, default="#d9622b")
+    secondary = Column(String, default="#8a7f76")
+    success   = Column(String, default="#27ae60")
+    danger    = Column(String, default="#c0392b")
+    warning   = Column(String, default="#e0b13f")
+    info      = Column(String, default="#3498db")
+    light     = Column(String, default="#fff8f0")
+    dark      = Column(String, default="#2e2a26")

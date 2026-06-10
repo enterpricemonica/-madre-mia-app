@@ -9,6 +9,7 @@ class MenuItemBase(BaseModel):
     price: int
     category: str
     available: bool = True
+    image_url: Optional[str] = None
 
 class MenuItemCreate(MenuItemBase):
     pass
@@ -74,3 +75,19 @@ class LoginRequest(BaseModel):
 class TokenOut(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+# ── THEME (colores configurables, estilo Bootstrap) ──
+class ThemeOut(BaseModel):
+    primary: str
+    secondary: str
+    success: str
+    danger: str
+    warning: str
+    info: str
+    light: str
+    dark: str
+    class Config:
+        from_attributes = True
+
+class ThemeUpdate(ThemeOut):
+    pass

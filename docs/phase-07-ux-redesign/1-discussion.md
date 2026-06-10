@@ -48,5 +48,15 @@ Recibidos `logo.jpeg` y `menu.png` (la carta física). **La carta física es nue
 - ✅ **Fotos: enfoque HÍBRIDO (C)** — base elegante negra/dorada + foto en los platos que sí tengan buena foto (tienen algunas). No se requiere fotografiar los 39.
 - ✅ Categorías ya alineadas con la BD.
 
+## 🔄 Revisión tras feedback de Rachel (2026-06-10)
+Se probó en vivo el tema negro/dorado (Waves 1-2). Feedback de la dueña:
+- ❌ Prefiere los **colores originales cálidos** (crema/terracota), no el negro/dorado.
+- ❌ La barra de categorías mostraba el **scrollbar** y se veía mal.
+
+**Decisiones revisadas:**
+- ✅ **Paleta: 100% original (crema/terracota) + el logo** arriba (como badge). Se descarta el fondo negro.
+- ✅ **Chips de categoría: se mantienen pero con el scrollbar OCULTO** (limpio, tipo Rappi).
+- ↩️ El enfoque "llevar la carta negra a la app" se descarta; la marca aporta el **logo**, no el fondo negro.
+
 ## Siguiente etapa
 → **2. Research Plan:** patrones de UI para menús oscuros con fotos, accesibilidad/contraste, jerarquía visual, mejores prácticas de menú móvil. Luego **3. Execution** (rediseñar `index.css` + `App.tsx` con la nueva identidad).

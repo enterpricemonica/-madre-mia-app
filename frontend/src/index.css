@@ -1,14 +1,25 @@
-/* Paleta de marca Madre Mía (de la carta física): negro suave + dorado + crema.
-   Cámbiala aquí y se actualiza toda la app. */
+/* Colores del tema (estilo Bootstrap) — configurables desde el admin.
+   El admin los guarda en la BD y la app los aplica al cargar (ver main.tsx). */
 :root {
-  --bg: #0f0f0f; /* negro suave (no puro) — elegante */
-  --surface: #1a1814; /* tarjetas: dark cálido */
-  --text: #f4efe6; /* texto principal: crema/blanco */
-  --muted: #a59c8c; /* texto secundario */
-  --accent: #c8a13a; /* dorado/mostaza (títulos, precios, acentos) */
-  --accent-dark: #a8862b; /* dorado oscuro (hover) */
-  --border: #2e2a22; /* bordes sutiles */
-  --shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  --primary: #d9622b;
+  --secondary: #8a7f76;
+  --success: #27ae60;
+  --danger: #c0392b;
+  --warning: #e0b13f;
+  --info: #3498db;
+  --light: #fff8f0;
+  --dark: #2e2a26;
+
+  /* Variables que usa la app, DERIVADAS de las de arriba.
+     Cambiar un color Bootstrap repinta todo automáticamente. */
+  --bg: var(--light);
+  --surface: #ffffff;
+  --text: var(--dark);
+  --muted: var(--secondary);
+  --accent: var(--primary);
+  --accent-dark: var(--primary);
+  --border: #efe6da;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;

@@ -9,6 +9,7 @@ interface MenuItem {
   price: number
   category: string
   available: boolean
+  image_url: string | null
 }
 
 function getTableNumberFromUrl() {
@@ -140,6 +141,13 @@ function App() {
               .filter((item) => item.category === category)
               .map((item) => (
                 <article key={item.id} className="card">
+                  {item.image_url && (
+                    <img
+                      src={item.image_url}
+                      alt={`Foto de ${item.name}`}
+                      className="card-img"
+                    />
+                  )}
                   <div className="card-info">
                     <h3 className="card-name">{item.name}</h3>
                     {item.description && (

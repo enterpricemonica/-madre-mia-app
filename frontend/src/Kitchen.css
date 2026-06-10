@@ -31,13 +31,13 @@
 
 /* Color de la franja según el estado */
 .order-card.status-received {
-  border-left-color: #e07a3f;
+  border-left-color: var(--primary);
 }
 .order-card.status-preparing {
-  border-left-color: #e0b13f;
+  border-left-color: var(--warning);
 }
 .order-card.status-ready {
-  border-left-color: #2e9e5b;
+  border-left-color: var(--success);
 }
 
 .order-head {

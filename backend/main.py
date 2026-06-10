@@ -3,10 +3,23 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
 import models
-from routers import menu, tables, orders, auth
+from routers import menu, tables, orders, auth, settings
 
 # Automatically create all tables in PostgreSQL
 Base.metadata.create_all(bind=engine)
+
+
+# Mini-migración: agrega columnas nuevas a tablas que ya existen (idempotente).
+# create_all NO modifica tablas viejas. Para proyectos grandes se usa Alembic;
+# a esta escala, este ALTER ... IF NOT EXISTS basta y hace seguro el deploy.
+def ensure_columns():
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS image_url VARCHAR"))
+        conn.commit()
+
+
+ensure_columns()
 
 
 # Create the admin user on startup from env vars (only if it doesn't exist yet)
@@ -45,6 +58,7 @@ app.include_router(menu.router)
 app.include_router(tables.router)
 app.include_router(orders.router)
 app.include_router(auth.router)
+app.include_router(settings.router)
 
 @app.get("/")
 def root():
