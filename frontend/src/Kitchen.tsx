@@ -70,7 +70,7 @@ function Kitchen() {
         {activeOrders.map((order) => (
           <div key={order.id} className={`order-card status-${order.status}`}>
             <div className="order-head">
-              <strong>Mesa {order.table_id}</strong>
+              <strong>Pedido #{order.id} · Mesa {order.table_id}</strong>
               <span className="badge">{order.status}</span>
             </div>
             <ul>
