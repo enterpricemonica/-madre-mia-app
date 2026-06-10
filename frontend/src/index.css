@@ -1,20 +1,21 @@
-/* Variables de color: cámbialas aquí y se actualiza toda la app */
+/* Paleta de marca Madre Mía (de la carta física): negro suave + dorado + crema.
+   Cámbiala aquí y se actualiza toda la app. */
 :root {
-  --bg: #fff8f0; /* crema cálido de fondo */
-  --surface: #ffffff; /* tarjetas */
-  --text: #2e2a26; /* texto principal */
-  --muted: #8a7f76; /* texto secundario (descripciones) */
-  --accent: #d9622b; /* naranja terracota */
-  --accent-dark: #b34d1e; /* naranja oscuro (hover/precio) */
-  --border: #efe6da;
-  --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --bg: #0f0f0f; /* negro suave (no puro) — elegante */
+  --surface: #1a1814; /* tarjetas: dark cálido */
+  --text: #f4efe6; /* texto principal: crema/blanco */
+  --muted: #a59c8c; /* texto secundario */
+  --accent: #c8a13a; /* dorado/mostaza (títulos, precios, acentos) */
+  --accent-dark: #a8862b; /* dorado oscuro (hover) */
+  --border: #2e2a22; /* bordes sutiles */
+  --shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 * {
-  box-sizing: border-box; /* el padding no agranda los elementos */
+  box-sizing: border-box;
 }
 
 body {

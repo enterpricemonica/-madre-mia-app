@@ -20,6 +20,9 @@ function getTableNumberFromUrl() {
 // se define la variable VITE_API_URL con la URL real de Railway.
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
+// Convierte "Bebidas Frías" en "Bebidas-Frías" para usarlo como id (sin espacios)
+const slug = (s: string) => s.replace(/\s+/g, '-')
+
 function App() {
   const tableNumber = getTableNumberFromUrl()
   const [menu, setMenu] = useState<MenuItem[]>([])
@@ -30,6 +33,9 @@ function App() {
 
   // El id interno de la mesa (lo necesita el pedido). null = todavía no cargado.
   const [tableId, setTableId] = useState<number | null>(null)
+
+  // Categoría activa (para resaltar el chip que se tocó)
+  const [activeCat, setActiveCat] = useState('')
 
   // Traer el menú al cargar la pantalla
   useEffect(() => {
@@ -104,13 +110,31 @@ function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1>Madre Mía 🫓</h1>
+        <img src="/logo.jpeg" alt="Madre Mía — Arepas con Café de Origen" className="header-logo" />
         <p className="subtitle">Mesa {tableNumber}</p>
       </header>
 
+      {/* Barra de categorías (chips) — salta a cada sección */}
+      <nav className="cat-nav">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            className={`cat-chip ${activeCat === cat ? 'active' : ''}`}
+            onClick={() => {
+              setActiveCat(cat)
+              document
+                .getElementById(`cat-${slug(cat)}`)
+                ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }}
+          >
+            {cat}
+          </button>
+        ))}
+      </nav>
+
       <main className="menu">
         {categories.map((category) => (
-          <section key={category}>
+          <section id={`cat-${slug(category)}`} key={category}>
             <h2 className="category-title">{category}</h2>
             {menu
               .filter((item) => item.category === category)
