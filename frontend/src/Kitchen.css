@@ -86,3 +86,38 @@
 .order-card button:hover {
   background: var(--accent-dark);
 }
+
+/* ── Fila de pago "¿Cómo pagó?" ── */
+.pay-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.pay-ask-label {
+  font-size: 13px;
+  color: var(--muted);
+  width: 100%;
+}
+.order-card .pay-btn {
+  width: auto; /* anula el ancho completo del botón grande */
+  flex: 1;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--accent);
+  padding: 8px 10px;
+  font-size: 14px;
+}
+.order-card .pay-btn:hover {
+  background: var(--accent);
+  color: var(--dark);
+}
+.paid-badge {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--success);
+  background: var(--bg);
+  padding: 6px 12px;
+  border-radius: 10px;
+}

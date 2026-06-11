@@ -16,6 +16,24 @@ interface MenuItem {
 
 const EMPTY_NEW = { name: '', description: '', price: 0, category: '', image_url: '' }
 
+// La forma del reporte de ventas (coincide con el backend)
+interface SalesReport {
+  date: string
+  total: number
+  count: number
+  by_method: Record<string, number>
+}
+
+// Nombres bonitos para cada método de pago
+const METHOD_LABELS: Record<string, string> = {
+  bre_b: 'Bre-B / QR',
+  nequi: 'Nequi',
+  card: 'Tarjeta',
+  efectivo: 'Efectivo',
+  datafono: 'Datáfono',
+  otro: 'Otro',
+}
+
 // Los 8 colores del tema (estilo Bootstrap) con su etiqueta
 const THEME_FIELDS = [
   { key: 'primary', label: 'Principal' },
@@ -79,6 +97,11 @@ function Admin() {
   const [theme, setTheme] = useState<Record<string, string> | null>(null)
   const [showTheme, setShowTheme] = useState(false) // panel de tema oculto por defecto
 
+  // Reportes de ventas
+  const [showReports, setShowReports] = useState(false)
+  const [report, setReport] = useState<SalesReport | null>(null)
+  const [reportDate, setReportDate] = useState(() => new Date().toISOString().slice(0, 10))
+
   // Headers con el token, para las acciones protegidas
   const authHeaders = {
     'Content-Type': 'application/json',
@@ -130,6 +153,30 @@ function Admin() {
         alert('Tema guardado ✅')
       })
       .catch(() => alert('No se pudo guardar el tema'))
+  }
+
+  // ── Reportes de ventas ──
+  function loadReport(date: string) {
+    fetch(`${API_URL}/reports/sales?date=${date}`, { headers: authHeaders })
+      .then((r) => r.json())
+      .then(setReport)
+      .catch(() => alert('No se pudo cargar el reporte'))
+  }
+
+  // Descargar el CSV. Como el endpoint está protegido, no sirve un <a href> normal
+  // (no mandaría el token); lo bajamos con fetch + un link temporal.
+  function downloadCsv() {
+    fetch(`${API_URL}/reports/sales.csv?date=${reportDate}`, { headers: authHeaders })
+      .then((r) => r.blob())
+      .then((blob) => {
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `ventas-${reportDate}.csv`
+        a.click()
+        URL.revokeObjectURL(url)
+      })
+      .catch(() => alert('No se pudo descargar el CSV'))
   }
 
   function changePrice(id: number, price: number) {
@@ -198,6 +245,16 @@ function Admin() {
         <div className="admin-actions">
           <button
             className="icon-btn"
+            onClick={() => {
+              if (!showReports) loadReport(reportDate) // al abrir, carga el día de hoy
+              setShowReports((s) => !s)
+            }}
+            title="Reportes de ventas"
+          >
+            📊
+          </button>
+          <button
+            className="icon-btn"
             onClick={() => setShowTheme((s) => !s)}
             title="Tema (colores)"
           >
@@ -226,6 +283,58 @@ function Admin() {
             ))}
           </div>
           <button onClick={saveTheme}>Guardar tema</button>
+        </div>
+      )}
+
+      {/* ── Reportes de ventas — se muestra al tocar 📊 ── */}
+      {showReports && (
+        <div className="report-panel">
+          <h2>📊 Reporte de ventas</h2>
+          <div className="report-controls">
+            <label>
+              Fecha:{' '}
+              <input
+                type="date"
+                value={reportDate}
+                onChange={(e) => {
+                  setReportDate(e.target.value)
+                  loadReport(e.target.value)
+                }}
+              />
+            </label>
+            <button onClick={downloadCsv}>⬇️ Descargar CSV</button>
+          </div>
+
+          {report && (
+            <>
+              <p className="report-total">
+                Total del día:{' '}
+                <strong>${report.total.toLocaleString('es-CO')}</strong>{' '}
+                <span className="report-count">({report.count} pedidos)</span>
+              </p>
+              <table className="report-table">
+                <thead>
+                  <tr>
+                    <th>Método</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(report.by_method).map(([method, amount]) => (
+                    <tr key={method}>
+                      <td>{METHOD_LABELS[method] || method}</td>
+                      <td>${amount.toLocaleString('es-CO')}</td>
+                    </tr>
+                  ))}
+                  {report.count === 0 && (
+                    <tr>
+                      <td colSpan={2}>Sin ventas este día.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </>
+          )}
         </div>
       )}
 

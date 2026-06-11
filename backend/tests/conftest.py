@@ -24,6 +24,8 @@ from database import Base, get_db  # noqa: E402
 from routers import orders as orders_router  # noqa: E402
 from routers import menu as menu_router  # noqa: E402
 from routers import payments as payments_router  # noqa: E402
+from routers import reports as reports_router  # noqa: E402
+from auth import get_current_user  # noqa: E402
 
 
 @pytest.fixture()
@@ -44,19 +46,34 @@ def db_session():
         Base.metadata.drop_all(bind=engine)
 
 
-@pytest.fixture()
-def client(db_session):
-    """App de prueba con los routers reales, pero con get_db apuntando a la SQLite."""
+def _build_app(db_session, auth=True):
+    """Arma una app de prueba con los routers reales y get_db apuntando a la SQLite.
+    Si auth=True, saltamos el login (simulamos un admin) para probar rutas protegidas."""
     app = FastAPI()
     app.include_router(menu_router.router)
     app.include_router(orders_router.router)
     app.include_router(payments_router.router)
+    app.include_router(reports_router.router)
 
     def override_get_db():
         yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
+    if auth:
+        app.dependency_overrides[get_current_user] = lambda: "test-admin"
     return TestClient(app)
+
+
+@pytest.fixture()
+def client(db_session):
+    """App de prueba con admin simulado (las rutas protegidas pasan)."""
+    return _build_app(db_session, auth=True)
+
+
+@pytest.fixture()
+def client_no_auth(db_session):
+    """App de prueba SIN simular login (para verificar que las rutas protegidas rechazan)."""
+    return _build_app(db_session, auth=False)
 
 
 @pytest.fixture()

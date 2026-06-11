@@ -15,6 +15,8 @@ interface Order {
   id: number
   table_id: number
   status: string
+  order_type: string
+  is_paid: boolean
   total: number
   created_at: string
   items: OrderItem[]
@@ -53,9 +55,19 @@ function Kitchen() {
     }).then(() => loadOrders())
   }
 
-  // Solo pedidos activos (no entregados ni pagados), del más viejo al más nuevo
+  // Registrar cómo pagó (efectivo/datáfono) y recargar.
+  function recordPayment(orderId: number, method: 'efectivo' | 'datafono') {
+    fetch(`${API_URL}/payments/manual`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order_id: orderId, method }),
+    }).then(() => loadOrders())
+  }
+
+  // Un pedido sale de la cocina solo cuando está ENTREGADO **y** PAGADO.
+  // Así Rachel puede registrar el pago aunque lo paguen después de comer.
   const activeOrders = orders
-    .filter((o) => o.status !== 'delivered' && o.status !== 'paid')
+    .filter((o) => !(o.status === 'delivered' && o.is_paid))
     .sort((a, b) => a.id - b.id)
 
   return (
@@ -70,7 +82,10 @@ function Kitchen() {
         {activeOrders.map((order) => (
           <div key={order.id} className={`order-card status-${order.status}`}>
             <div className="order-head">
-              <strong>Pedido #{order.id} · Mesa {order.table_id}</strong>
+              <strong>
+                Pedido #{order.id} · Mesa {order.table_id}{' '}
+                {order.order_type === 'takeaway' ? '🥡' : '🍽️'}
+              </strong>
               <span className="badge">{order.status}</span>
             </div>
             <ul>
@@ -88,6 +103,29 @@ function Kitchen() {
                 {NEXT_STATUS[order.status].label}
               </button>
             )}
+
+            {/* ── Pago: si ya pagó, sello; si no, "¿Cómo pagó?" ── */}
+            <div className="pay-row">
+              {order.is_paid ? (
+                <span className="paid-badge">💵 Pagado</span>
+              ) : (
+                <>
+                  <span className="pay-ask-label">¿Cómo pagó?</span>
+                  <button
+                    className="pay-btn"
+                    onClick={() => recordPayment(order.id, 'efectivo')}
+                  >
+                    💵 Efectivo
+                  </button>
+                  <button
+                    className="pay-btn"
+                    onClick={() => recordPayment(order.id, 'datafono')}
+                  >
+                    💳 Datáfono
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         ))}
       </div>

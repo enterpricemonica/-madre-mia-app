@@ -6,8 +6,11 @@ import payments_gateway
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
 
-# Métodos que el cliente puede elegir.
+# Métodos que el cliente puede elegir en la app.
 VALID_METHODS = ["bre_b", "nequi", "card"]
+
+# Métodos manuales (los registra la cocina al cerrar el pedido).
+VALID_MANUAL_METHODS = ["efectivo", "datafono"]
 
 
 # POST /payments — inicia el cobro de un pedido.
@@ -48,6 +51,38 @@ def create_payment(payload: schemas.PaymentCreate, db: Session = Depends(get_db)
         **schemas.PaymentOut.model_validate(payment).model_dump(),
         qr_url=charge["qr_url"],
     )
+
+
+# POST /payments/manual — registrar pago en efectivo o datáfono (lo marca la cocina al cerrar).
+@router.post("/manual", response_model=schemas.PaymentOut)
+def create_manual_payment(payload: schemas.ManualPaymentCreate, db: Session = Depends(get_db)):
+    order = db.query(models.Order).filter(models.Order.id == payload.order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    if payload.method not in VALID_MANUAL_METHODS:
+        raise HTTPException(status_code=400, detail=f"Manual method '{payload.method}' is invalid.")
+
+    # No duplicar: si el pedido ya tiene un pago aprobado, no se registra otro.
+    existing = (
+        db.query(models.Payment)
+        .filter(models.Payment.order_id == order.id, models.Payment.status == "approved")
+        .first()
+    )
+    if existing:
+        raise HTTPException(status_code=400, detail="Order already has an approved payment")
+
+    payment = models.Payment(
+        order_id=order.id,
+        amount=order.total,   # SEGURIDAD: el monto sale del pedido, no del cliente
+        method=payload.method,
+        provider="manual",
+        status="approved",    # un pago manual entra ya confirmado
+    )
+    db.add(payment)
+    db.commit()
+    db.refresh(payment)
+    return payment
 
 
 # POST /payments/webhook — la pasarela nos avisa el resultado del pago.

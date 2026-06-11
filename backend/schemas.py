@@ -78,6 +78,11 @@ class PaymentCreate(BaseModel):
     order_id: int
     method: Optional[str] = None  # bre_b / nequi / card
 
+# Pago manual (efectivo/datáfono) que registra la cocina al cerrar el pedido.
+class ManualPaymentCreate(BaseModel):
+    order_id: int
+    method: str  # efectivo / datafono
+
 class PaymentOut(BaseModel):
     id: int
     order_id: int
