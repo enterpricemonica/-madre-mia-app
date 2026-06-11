@@ -24,5 +24,13 @@ La app es **cliente (celular) → backend en la nube (Railway) → cocina**. Si 
 - [ ] ¿Dónde duele más: que el **cliente** no pueda pedir, o que la **cocina/admin** se quede sin ver pedidos?
 - [ ] ¿Vale la pena la cola de pedidos offline, o basta con que cargue rápido y reintente?
 
-## Siguiente etapa
-→ Research Plan: PWA con Vite (plugin `vite-plugin-pwa`), service workers, estrategias de caché, y cómo encolar peticiones offline.
+## 🔄 Decisión (tras confirmar con Rachel, 2026-06-10)
+Rachel confirmó que el restaurante tiene **buen internet (5G, plan de 200 GB)**. Por lo tanto:
+- ❌ **Se DESPRIORIZA el offline/local-first** — no aplica el problema de "internet malo" en el local. Sería sobre-ingeniería para el tamaño y la situación del negocio.
+- 💡 Una **PWA ligera** (app instalable, carga rápida, ícono en el celular) queda como **mejora opcional futura** — barata y agradable, pero NO prioritaria.
+- ✅ Seguimos con la arquitectura cloud actual, que es suficiente.
+
+**Fase 9 → en pausa.** Retomar solo si más adelante aparece una necesidad real (ej. un local nuevo con mala conexión).
+
+## Siguiente etapa (si se retoma)
+→ Research Plan: PWA con Vite (plugin `vite-plugin-pwa`), service workers, caché del menú/tema.

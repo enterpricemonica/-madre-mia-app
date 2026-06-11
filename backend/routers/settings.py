@@ -7,8 +7,8 @@ from auth import get_current_user
 router = APIRouter(prefix="/settings", tags=["Settings"])
 
 DEFAULTS = dict(
-    primary="#d9622b", secondary="#8a7f76", success="#27ae60", danger="#c0392b",
-    warning="#e0b13f", info="#3498db", light="#fff8f0", dark="#2e2a26",
+    primary="#c89b3c", secondary="#8a7f72", success="#4a9d5b", danger="#c0392b",
+    warning="#e0a92e", info="#5b8fa3", light="#fdf6ea", dark="#211b14",
 )
 
 

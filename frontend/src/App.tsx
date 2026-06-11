@@ -10,6 +10,7 @@ interface MenuItem {
   category: string
   available: boolean
   image_url: string | null
+  featured: boolean
 }
 
 function getTableNumberFromUrl() {
@@ -112,7 +113,8 @@ function App() {
     <div className="app">
       <header className="header">
         <img src="/logo.jpeg" alt="Madre Mía — Arepas con Café de Origen" className="header-logo" />
-        <p className="subtitle">Mesa {tableNumber}</p>
+        <p className="welcome">Bienvenido 🫓</p>
+        <p className="table-pill">Mesa {tableNumber}</p>
       </header>
 
       {/* Barra de categorías (chips) — salta a cada sección */}
@@ -149,6 +151,9 @@ function App() {
                     />
                   )}
                   <div className="card-info">
+                    {item.featured && (
+                      <span className="fav-badge">⭐ Favorito</span>
+                    )}
                     <h3 className="card-name">{item.name}</h3>
                     {item.description && (
                       <p className="card-desc">{item.description}</p>

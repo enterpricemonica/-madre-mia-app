@@ -10,6 +10,7 @@ class MenuItemBase(BaseModel):
     category: str
     available: bool = True
     image_url: Optional[str] = None
+    featured: bool = False
 
 class MenuItemCreate(MenuItemBase):
     pass

@@ -25,6 +25,7 @@ class MenuItem(Base):
     category    = Column(String, nullable=False)
     available   = Column(Boolean, default=True)
     image_url   = Column(String, nullable=True)  # ruta/URL de la foto (opcional)
+    featured    = Column(Boolean, default=False)  # plato estrella (⭐ Favorito)
 
 
 class Order(Base):

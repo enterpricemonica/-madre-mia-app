@@ -16,6 +16,7 @@ def ensure_columns():
     from sqlalchemy import text
     with engine.connect() as conn:
         conn.execute(text("ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS image_url VARCHAR"))
+        conn.execute(text("ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS featured BOOLEAN DEFAULT false"))
         conn.commit()
 
 

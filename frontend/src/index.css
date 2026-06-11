@@ -1,14 +1,14 @@
 /* Colores del tema (estilo Bootstrap) — configurables desde el admin.
    El admin los guarda en la BD y la app los aplica al cargar (ver main.tsx). */
 :root {
-  --primary: #d9622b;
-  --secondary: #8a7f76;
-  --success: #27ae60;
+  --primary: #c89b3c;
+  --secondary: #8a7f72;
+  --success: #4a9d5b;
   --danger: #c0392b;
-  --warning: #e0b13f;
-  --info: #3498db;
-  --light: #fff8f0;
-  --dark: #2e2a26;
+  --warning: #e0a92e;
+  --info: #5b8fa3;
+  --light: #fdf6ea;
+  --dark: #211b14;
 
   /* Variables que usa la app, DERIVADAS de las de arriba.
      Cambiar un color Bootstrap repinta todo automáticamente. */

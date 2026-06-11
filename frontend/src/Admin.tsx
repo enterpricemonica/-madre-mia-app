@@ -11,6 +11,7 @@ interface MenuItem {
   category: string
   available: boolean
   image_url: string | null
+  featured: boolean
 }
 
 const EMPTY_NEW = { name: '', description: '', price: 0, category: '', image_url: '' }
@@ -151,6 +152,10 @@ function Admin() {
     saveItem({ ...item, available: !item.available })
   }
 
+  function toggleFeatured(item: MenuItem) {
+    saveItem({ ...item, featured: !item.featured })
+  }
+
   function deleteItem(id: number) {
     if (!confirm('¿Seguro que quieres borrar este plato?')) return
     fetch(`${API_URL}/menu/${id}`, {
@@ -265,6 +270,7 @@ function Admin() {
             <th>Precio</th>
             <th>Foto</th>
             <th>Estado</th>
+            <th>⭐</th>
             <th></th>
           </tr>
         </thead>
@@ -292,6 +298,11 @@ function Admin() {
               <td>
                 <button onClick={() => toggleAvailable(item)}>
                   {item.available ? '✅ Disponible' : '🚫 Oculto'}
+                </button>
+              </td>
+              <td>
+                <button onClick={() => toggleFeatured(item)} title="Favorito">
+                  {item.featured ? '⭐' : '☆'}
                 </button>
               </td>
               <td>
