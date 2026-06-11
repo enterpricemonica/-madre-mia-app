@@ -86,6 +86,15 @@ class PaymentOut(BaseModel):
     class Config:
         from_attributes = True
 
+# Respuesta al INICIAR el cobro: el pago + el QR dinámico a mostrar en pantalla.
+class PaymentInitOut(PaymentOut):
+    qr_url: Optional[str] = None
+
+# Lo que manda la pasarela en el webhook (forma simplificada; se adapta a Bold real luego).
+class PaymentWebhook(BaseModel):
+    provider_ref: str
+    status: str  # approved / declined
+
 # ── AUTH ──
 class LoginRequest(BaseModel):
     username: str

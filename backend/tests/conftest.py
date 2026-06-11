@@ -23,6 +23,7 @@ import models  # noqa: E402  (registra todas las tablas en Base.metadata)
 from database import Base, get_db  # noqa: E402
 from routers import orders as orders_router  # noqa: E402
 from routers import menu as menu_router  # noqa: E402
+from routers import payments as payments_router  # noqa: E402
 
 
 @pytest.fixture()
@@ -49,7 +50,7 @@ def client(db_session):
     app = FastAPI()
     app.include_router(menu_router.router)
     app.include_router(orders_router.router)
-    # Cuando exista el router de pagos, se incluye aquí.
+    app.include_router(payments_router.router)
 
     def override_get_db():
         yield db_session
