@@ -68,6 +68,24 @@ class OrderOut(BaseModel):
 class OrderStatusUpdate(BaseModel):
     status: str
 
+# ── PAYMENTS ──
+# El cliente solo manda a qué pedido y (opcional) con qué método quiere pagar.
+# El MONTO nunca lo manda el cliente: se calcula en el servidor desde el pedido.
+class PaymentCreate(BaseModel):
+    order_id: int
+    method: Optional[str] = None  # bre_b / nequi / card
+
+class PaymentOut(BaseModel):
+    id: int
+    order_id: int
+    provider: str
+    method: Optional[str] = None
+    amount: int
+    status: str
+    created_at: datetime
+    class Config:
+        from_attributes = True
+
 # ── AUTH ──
 class LoginRequest(BaseModel):
     username: str

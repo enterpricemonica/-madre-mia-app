@@ -39,6 +39,7 @@ class Order(Base):
 
     table      = relationship("Table", back_populates="orders")
     items      = relationship("OrderItem", back_populates="order")
+    payment    = relationship("Payment", back_populates="order", uselist=False)
 
 
 class OrderItem(Base):
@@ -58,6 +59,22 @@ class OrderItem(Base):
     @property
     def name(self):
         return self.item.name if self.item else None
+
+
+class Payment(Base):
+    __tablename__ = "payments"
+
+    id           = Column(Integer, primary_key=True, index=True)
+    order_id     = Column(Integer, ForeignKey("orders.id"), nullable=False)
+    provider     = Column(String, default="bold")     # pasarela usada (por ahora: bold)
+    provider_ref = Column(String, nullable=True)       # id de la transacción en la pasarela (casa el webhook)
+    method       = Column(String, nullable=True)       # bre_b / nequi / card (lo elige el cliente)
+    amount       = Column(Integer, nullable=False)     # monto cobrado en COP (enteros, sin decimales)
+    status       = Column(String, default="pending")   # pending → approved / declined
+    created_at   = Column(DateTime, default=datetime.utcnow)
+    updated_at   = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    order        = relationship("Order", back_populates="payment")
 
 
 class User(Base):

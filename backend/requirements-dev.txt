@@ -1,0 +1,5 @@
+# Dependencias SOLO para pruebas locales.
+# NO se instalan en producción (no van en requirements.txt).
+# Uso: pip install -r requirements-dev.txt
+pytest
+httpx
