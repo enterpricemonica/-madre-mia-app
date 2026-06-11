@@ -13,6 +13,26 @@ interface MenuItem {
   featured: boolean
 }
 
+// La forma de un pedido creado (coincide con OrderOut del backend)
+interface Order {
+  id: number
+  table_id: number
+  status: string
+  order_type: 'dine_in' | 'takeaway'
+  is_paid: boolean
+  total: number
+}
+
+// La respuesta al iniciar un cobro (coincide con PaymentInitOut del backend)
+interface PaymentInit {
+  id: number
+  order_id: number
+  method: string | null
+  amount: number
+  status: string
+  qr_url: string | null
+}
+
 function getTableNumberFromUrl() {
   const match = window.location.pathname.match(/\/table\/(\d+)/)
   return match ? Number(match[1]) : 1
@@ -39,6 +59,24 @@ function App() {
   // Categoría activa (para resaltar el chip que se tocó)
   const [activeCat, setActiveCat] = useState('')
 
+  // Tipo de pedido: comer aquí (dine_in) o para llevar (takeaway). Arranca en "aquí".
+  const [orderType, setOrderType] = useState<'dine_in' | 'takeaway'>('dine_in')
+
+  // El pedido ya creado. null = todavía en el menú; con valor = pasamos a pagar.
+  const [order, setOrder] = useState<Order | null>(null)
+
+  // El método de pago que el cliente elige (null = aún no elige).
+  const [selectedMethod, setSelectedMethod] = useState<'bre_b' | 'nequi' | 'card' | null>(null)
+
+  // El cobro ya iniciado (trae el QR). null = aún no se ha iniciado.
+  const [payment, setPayment] = useState<PaymentInit | null>(null)
+
+  // true mientras le pedimos el QR al backend (para no tocar dos veces).
+  const [paying, setPaying] = useState(false)
+
+  // true cuando el backend confirma que el pago fue aprobado.
+  const [paid, setPaid] = useState(false)
+
   // Traer el menú al cargar la pantalla
   useEffect(() => {
     fetch(`${API_URL}/menu/`)
@@ -53,6 +91,23 @@ function App() {
       .then((response) => response.json())
       .then((table) => setTableId(table.id ?? null)) // si no existe, queda null
   }, [tableNumber])
+
+  // POLLING: mientras haya un cobro en curso y aún no esté pagado,
+  // preguntamos cada 3s "¿ya pagaron?". Cuando diga approved, marcamos pagado.
+  useEffect(() => {
+    if (!payment || paid) return // nada que vigilar
+
+    const interval = setInterval(() => {
+      fetch(`${API_URL}/payments/${payment.order_id}/status`)
+        .then((response) => response.json())
+        .then((p) => {
+          if (p.status === 'approved') setPaid(true)
+        })
+        .catch((error) => console.error('Error consultando el pago:', error))
+    }, 3000)
+
+    return () => clearInterval(interval) // limpieza: detener el reloj al salir
+  }, [payment, paid])
 
   // Agregar 1 unidad de un item al carrito
   function addToCart(itemId: number) {
@@ -90,6 +145,7 @@ function App() {
 
     const payload = {
       table_id: tableId, // 👈 el ID interno, no el número
+      order_type: orderType, // 🍽️ aquí o 🥡 llevar
       items,
     }
 
@@ -99,14 +155,151 @@ function App() {
       body: JSON.stringify(payload),
     })
       .then((response) => response.json())
-      .then((order) => {
-        alert('¡Pedido enviado! #' + order.id)
-        setCart({})
+      .then((createdOrder: Order) => {
+        setOrder(createdOrder) // 👈 guardar el pedido → aparece la pantalla de pago
+        setCart({}) // vaciamos el carrito
       })
       .catch((error) => {
         console.error('Error al enviar el pedido:', error)
         alert('No se pudo enviar el pedido')
       })
+  }
+
+  // Iniciar el cobro con el método elegido (POST /payments) → trae el QR.
+  function startPayment(method: 'bre_b' | 'nequi' | 'card') {
+    if (!order) return
+    setSelectedMethod(method)
+    setPaying(true)
+
+    fetch(`${API_URL}/payments/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order_id: order.id, method }),
+    })
+      .then((response) => response.json())
+      .then((createdPayment: PaymentInit) => {
+        setPayment(createdPayment) // 👈 guardar el cobro (con su QR) → mostramos el QR
+        setPaying(false)
+      })
+      .catch((error) => {
+        console.error('Error al iniciar el pago:', error)
+        alert('No se pudo iniciar el pago')
+        setPaying(false)
+      })
+  }
+
+  // Volver al inicio (menú limpio) después de pagar o cancelar.
+  function resetAll() {
+    setOrder(null)
+    setPayment(null)
+    setPaid(false)
+    setSelectedMethod(null)
+  }
+
+  // ── PANTALLA DE ÉXITO ──
+  // Si el pago fue aprobado, mostramos la confirmación final.
+  if (order && paid) {
+    return (
+      <div className="app pay-screen">
+        <main className="pay-body pay-success">
+          <span className="success-emoji">🎉</span>
+          <h1 className="success-title">¡Pago exitoso!</h1>
+          <p className="success-label">Tu número de pedido es</p>
+          <p className="success-order">#{order.id}</p>
+          <p className="success-msg">
+            {order.order_type === 'takeaway'
+              ? 'Te avisamos cuando esté listo para llevar 🥡'
+              : 'Ya puedes esperar en tu mesa 🫓'}
+          </p>
+          <button className="send-btn" onClick={resetAll}>
+            Hacer otro pedido
+          </button>
+        </main>
+      </div>
+    )
+  }
+
+  // ── PANTALLA DE PAGO ──
+  // Si ya hay un pedido creado, mostramos esta pantalla en vez del menú.
+  if (order) {
+    return (
+      <div className="app pay-screen">
+        <header className="header">
+          <img src="/logo.jpeg" alt="Madre Mía" className="header-logo" />
+        </header>
+
+        <main className="pay-body">
+          <p className="pay-confirm">✅ Pedido #{order.id} creado</p>
+          <p className="pay-type">
+            {order.order_type === 'takeaway' ? '🥡 Para llevar' : '🍽️ Para comer aquí'}
+          </p>
+
+          <p className="pay-total-label">Total a pagar</p>
+          <p className="pay-total">${order.total.toLocaleString('es-CO')}</p>
+
+          {!payment ? (
+            // ── Momento 1: elegir cómo pagar ──
+            <>
+              <h2 className="pay-q">¿Cómo quieres pagar?</h2>
+              <div className="pay-methods">
+                <button
+                  className={`pay-method ${selectedMethod === 'bre_b' ? 'active' : ''}`}
+                  onClick={() => startPayment('bre_b')}
+                  disabled={paying}
+                >
+                  📲 Bre-B / QR
+                </button>
+                <button
+                  className={`pay-method ${selectedMethod === 'nequi' ? 'active' : ''}`}
+                  onClick={() => startPayment('nequi')}
+                  disabled={paying}
+                >
+                  💜 Nequi
+                </button>
+                <button
+                  className={`pay-method ${selectedMethod === 'card' ? 'active' : ''}`}
+                  onClick={() => startPayment('card')}
+                  disabled={paying}
+                >
+                  💳 Tarjeta
+                </button>
+              </div>
+              {paying && <p className="pay-waiting">Generando tu QR…</p>}
+
+              <button
+                className="pay-back"
+                onClick={() => {
+                  setOrder(null) // volvemos al menú
+                  setSelectedMethod(null)
+                }}
+              >
+                ← Volver al menú
+              </button>
+            </>
+          ) : (
+            // ── Momento 2: mostrar el QR y esperar el pago ──
+            <>
+              <div className="qr-box">
+                <span className="qr-emoji">📲</span>
+                <span className="qr-text">Escanea para pagar</span>
+              </div>
+              <p className="pay-waiting">⏳ Esperando tu pago…</p>
+              <p className="qr-ref">Pago #{payment.id} · {payment.method}</p>
+
+              <button
+                className="pay-back"
+                onClick={() => {
+                  setPayment(null) // volver a elegir método
+                  setSelectedMethod(null)
+                }}
+              >
+                ← Elegir otro método
+              </button>
+            </>
+          )}
+        </main>
+      </div>
+    )
   }
 
   return (
@@ -177,15 +370,33 @@ function App() {
       {/* Barra fija abajo: solo aparece si hay algo en el carrito */}
       {total > 0 && (
         <footer className="cart-bar">
-          <div className="cart-bar-info">
-            <span className="cart-count">
-              {itemCount} {itemCount === 1 ? 'producto' : 'productos'}
-            </span>
-            <span className="cart-total">${total.toLocaleString('es-CO')}</span>
+          {/* Toggle: ¿comer aquí o para llevar? (mismo patrón que los chips de categoría) */}
+          <div className="order-type">
+            <button
+              className={`type-chip ${orderType === 'dine_in' ? 'active' : ''}`}
+              onClick={() => setOrderType('dine_in')}
+            >
+              🍽️ Aquí
+            </button>
+            <button
+              className={`type-chip ${orderType === 'takeaway' ? 'active' : ''}`}
+              onClick={() => setOrderType('takeaway')}
+            >
+              🥡 Llevar
+            </button>
           </div>
-          <button className="send-btn" onClick={sendOrder}>
-            Enviar pedido
-          </button>
+
+          <div className="cart-bar-main">
+            <div className="cart-bar-info">
+              <span className="cart-count">
+                {itemCount} {itemCount === 1 ? 'producto' : 'productos'}
+              </span>
+              <span className="cart-total">${total.toLocaleString('es-CO')}</span>
+            </div>
+            <button className="send-btn" onClick={sendOrder}>
+              Enviar pedido
+            </button>
+          </div>
         </footer>
       )}
     </div>
