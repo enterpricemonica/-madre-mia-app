@@ -57,6 +57,19 @@
 
 ---
 
+## Decisión 5 — Tipo de pedido + pago flexible ✅ (2026-06-10)
+Tras notar que hay clientes que **comen aquí y pagan al final** y otros que **piden para llevar**, se decide un modelo **flexible** en vez de forzar prepago:
+
+- La app pregunta al inicio: **"¿Comer aquí o para llevar?"** (`dine_in` / `takeaway`).
+- **El pedido y el pago son pistas SEPARADAS:**
+  - El **pedido** sigue su flujo de cocina (recibido → preparando → listo → entregado).
+  - El **pago** es aparte: `pendiente / aprobado`. Puede ocurrir **antes o después**.
+- **Para llevar** → prepago (Rachel no entrega sin pago).
+- **Comer aquí** → entra a cocina; pagan cuando quieran desde la app.
+- La cocina muestra un **sello "💵 pagado"** derivado del pago (no bloquea la preparación).
+
+**Implicación técnica:** el webhook ya NO marca `order.status = "paid"`. El "pagado" se **deriva** del pago (`Order.is_paid`). Se agrega `order_type` al pedido.
+
 ## ✅ Wave 0 — Diseño CERRADO (2026-06-10)
 Las 4 decisiones de diseño del kiosco están tomadas (layout, propina, inicio/reinicio, adiciones). Falta para arrancar la **Wave 1 (motor de pagos)**:
 - 🔑 **Dependencia:** crear cuenta/credenciales **sandbox de Bold** (bloquea el código de pagos).
