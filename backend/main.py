@@ -17,6 +17,7 @@ def ensure_columns():
     with engine.connect() as conn:
         conn.execute(text("ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS image_url VARCHAR"))
         conn.execute(text("ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS featured BOOLEAN DEFAULT false"))
+        conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_type VARCHAR DEFAULT 'dine_in'"))
         conn.commit()
 
 

@@ -6,6 +6,9 @@ from typing import List
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
+# Tipos de pedido válidos: comer aquí o para llevar.
+VALID_ORDER_TYPES = ["dine_in", "takeaway"]
+
 
 # POST /orders — create a new order
 @router.post("/", response_model=schemas.OrderOut)
@@ -19,8 +22,11 @@ def create_order(order: schemas.OrderCreate, db: Session = Depends(get_db)):
     if not order.items:
         raise HTTPException(status_code=400, detail="Order must have at least one item")
 
+    if order.order_type not in VALID_ORDER_TYPES:
+        raise HTTPException(status_code=400, detail=f"Order type '{order.order_type}' is invalid.")
+
     # PASO 2: Crear el objeto Order (todavía sin total).
-    new_order = models.Order(table_id=order.table_id)
+    new_order = models.Order(table_id=order.table_id, order_type=order.order_type)
     db.add(new_order)
     db.flush()  # asigna id a new_order sin hacer commit
 

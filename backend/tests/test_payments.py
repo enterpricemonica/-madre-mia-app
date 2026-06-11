@@ -44,8 +44,8 @@ def test_create_payment_rejects_invalid_method(client, db_session, seed_table):
     assert r.status_code == 400
 
 
-def test_webhook_marks_payment_approved_and_order_paid(client, db_session, seed_table):
-    order = _make_order(db_session, seed_table)
+def test_webhook_approves_payment_without_touching_kitchen(client, db_session, seed_table):
+    order = _make_order(db_session, seed_table)  # nace en "received" (flujo de cocina)
     client.post("/payments/", json={"order_id": order.id, "method": "bre_b"})
     ref = _ref_for(db_session, order.id)
 
@@ -53,8 +53,9 @@ def test_webhook_marks_payment_approved_and_order_paid(client, db_session, seed_
     assert r.status_code == 200
 
     db_session.refresh(order)
-    assert order.status == "paid"
-    assert _status_of(db_session, order.id) == "approved"
+    assert _status_of(db_session, order.id) == "approved"  # el PAGO quedó aprobado
+    assert order.status == "received"   # el flujo de cocina NO se tocó (pista aparte)
+    assert order.is_paid is True        # "pagado" se DERIVA del pago
 
 
 def test_webhook_is_idempotent(client, db_session, seed_table):
@@ -67,7 +68,8 @@ def test_webhook_is_idempotent(client, db_session, seed_table):
     assert r2.status_code == 200
 
     db_session.refresh(order)
-    assert order.status == "paid"  # sigue pagado, sin romperse
+    assert order.is_paid is True       # sigue pagado (derivado), sin romperse
+    assert order.status == "received"  # el flujo de cocina intacto
 
 
 def test_webhook_declined_does_not_mark_paid(client, db_session, seed_table):
@@ -77,7 +79,7 @@ def test_webhook_declined_does_not_mark_paid(client, db_session, seed_table):
 
     client.post("/payments/webhook", json={"provider_ref": ref, "status": "declined"})
     db_session.refresh(order)
-    assert order.status != "paid"
+    assert order.is_paid is False
     assert _status_of(db_session, order.id) == "declined"
 
 

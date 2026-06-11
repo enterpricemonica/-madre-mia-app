@@ -52,12 +52,15 @@ class OrderItemOut(BaseModel):
 # ── ORDERS ──
 class OrderCreate(BaseModel):
     table_id: int
+    order_type: str = "dine_in"   # dine_in (comer aquí) / takeaway (para llevar)
     items: List[OrderItemCreate]
 
 class OrderOut(BaseModel):
     id: int
     table_id: int
     status: str
+    order_type: str
+    is_paid: bool = False         # derivado del pago (no es un estado de cocina)
     total: int
     created_at: datetime
     items: List[OrderItemOut] = []

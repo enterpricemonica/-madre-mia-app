@@ -70,10 +70,9 @@ def payment_webhook(event: schemas.PaymentWebhook, request: Request, db: Session
         return {"status": "already_processed"}
 
     if event.status == "approved":
+        # El pago es una pista APARTE del flujo de cocina (pago ≠ estado del pedido).
+        # Solo marcamos el pago aprobado; el "pagado" se deriva de aquí (Order.is_paid).
         payment.status = "approved"
-        order = db.query(models.Order).filter(models.Order.id == payment.order_id).first()
-        if order:
-            order.status = "paid"  # ← solo aquí el pedido pasa a pagado
     elif event.status == "declined":
         payment.status = "declined"
     else:

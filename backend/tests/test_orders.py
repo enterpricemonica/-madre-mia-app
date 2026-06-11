@@ -21,6 +21,37 @@ def test_total_is_calculated_on_the_server(client, seed_menu, seed_table):
     assert r.json()["total"] == 13000 * 2 + 3000  # 29000
 
 
+def test_order_type_defaults_to_dine_in(client, seed_menu, seed_table):
+    arepa = seed_menu["arepa"]
+    r = client.post("/orders/", json={
+        "table_id": seed_table.id,
+        "items": [{"item_id": arepa.id, "quantity": 1}],
+    })
+    assert r.json()["order_type"] == "dine_in"
+    assert r.json()["is_paid"] is False  # recién creado, aún sin pagar
+
+
+def test_order_can_be_takeaway(client, seed_menu, seed_table):
+    arepa = seed_menu["arepa"]
+    r = client.post("/orders/", json={
+        "table_id": seed_table.id,
+        "order_type": "takeaway",
+        "items": [{"item_id": arepa.id, "quantity": 1}],
+    })
+    assert r.status_code == 200
+    assert r.json()["order_type"] == "takeaway"
+
+
+def test_invalid_order_type_is_rejected(client, seed_menu, seed_table):
+    arepa = seed_menu["arepa"]
+    r = client.post("/orders/", json={
+        "table_id": seed_table.id,
+        "order_type": "teletransporte",
+        "items": [{"item_id": arepa.id, "quantity": 1}],
+    })
+    assert r.status_code == 400
+
+
 def test_unavailable_item_is_rejected(client, seed_menu, seed_table):
     agotado = seed_menu["agotado"]
     r = client.post("/orders/", json={

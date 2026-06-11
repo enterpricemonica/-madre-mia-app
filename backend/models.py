@@ -34,12 +34,18 @@ class Order(Base):
     id         = Column(Integer, primary_key=True, index=True)
     table_id   = Column(Integer, ForeignKey("tables.id"))
     status     = Column(String, default="received")
+    order_type = Column(String, default="dine_in")  # dine_in (comer aquí) / takeaway (para llevar)
     total      = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     table      = relationship("Table", back_populates="orders")
     items      = relationship("OrderItem", back_populates="order")
     payment    = relationship("Payment", back_populates="order", uselist=False)
+
+    # "Pagado" se DERIVA del pago (pista aparte del flujo de cocina), no es un estado del pedido.
+    @property
+    def is_paid(self):
+        return self.payment is not None and self.payment.status == "approved"
 
 
 class OrderItem(Base):
