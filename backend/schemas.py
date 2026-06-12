@@ -122,6 +122,7 @@ class ThemeOut(BaseModel):
     info: str
     light: str
     dark: str
+    logo_url: str = "/logo.jpeg"
     class Config:
         from_attributes = True
 

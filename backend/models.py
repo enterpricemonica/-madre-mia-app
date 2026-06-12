@@ -103,3 +103,4 @@ class Theme(Base):
     info      = Column(String, default="#3498db")
     light     = Column(String, default="#fff8f0")
     dark      = Column(String, default="#2e2a26")
+    logo_url  = Column(String, default="/logo.jpeg")  # ruta/URL del logo (editable desde admin)

@@ -18,6 +18,7 @@ def ensure_columns():
         conn.execute(text("ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS image_url VARCHAR"))
         conn.execute(text("ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS featured BOOLEAN DEFAULT false"))
         conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_type VARCHAR DEFAULT 'dine_in'"))
+        conn.execute(text("ALTER TABLE theme ADD COLUMN IF NOT EXISTS logo_url VARCHAR DEFAULT '/logo.jpeg'"))
         conn.commit()
 
 

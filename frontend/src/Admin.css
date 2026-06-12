@@ -79,6 +79,26 @@
   border-bottom: 1px solid var(--border);
 }
 
+/* Campo de logo en el admin */
+.logo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 12px 0;
+}
+.logo-field input {
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.logo-preview {
+  max-width: 120px;
+  max-height: 120px;
+  border-radius: 12px;
+  display: block;
+  margin-bottom: 12px;
+}
+
 /* Pantalla de login */
 .login {
   max-width: 320px;

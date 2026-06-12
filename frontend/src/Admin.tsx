@@ -287,7 +287,7 @@ function Admin() {
       {/* ── Tema (colores) — se muestra solo al tocar el icono 🎨 ── */}
       {showTheme && theme && (
         <div className="theme-form">
-          <h2>🎨 Tema (colores)</h2>
+          <h2>🎨 Tema y logo</h2>
           <div className="theme-grid">
             {THEME_FIELDS.map((f) => (
               <label key={f.key} className="theme-field">
@@ -300,6 +300,22 @@ function Admin() {
               </label>
             ))}
           </div>
+
+          <label className="logo-field">
+            <span>Logo (URL o ruta de la imagen)</span>
+            <input
+              type="text"
+              value={theme.logo_url || ''}
+              onChange={(e) =>
+                setTheme((prev) => (prev ? { ...prev, logo_url: e.target.value } : prev))
+              }
+              placeholder="/logo.jpeg  o  https://..."
+            />
+          </label>
+          {theme.logo_url && (
+            <img src={theme.logo_url} alt="Vista previa del logo" className="logo-preview" />
+          )}
+
           <button onClick={saveTheme}>Guardar tema</button>
         </div>
       )}
