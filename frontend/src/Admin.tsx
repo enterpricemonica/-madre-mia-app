@@ -159,16 +159,25 @@ function Admin() {
   // ── Reportes de ventas ──
   function loadReport(date: string) {
     fetch(`${API_URL}/reports/sales?date=${date}`, { headers: authHeaders })
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error('report failed') // 401 si la sesión venció, etc.
+        return r.json()
+      })
       .then(setReport)
-      .catch(() => alert('No se pudo cargar el reporte'))
+      .catch(() => {
+        setReport(null) // no dejamos datos inválidos que rompan la pantalla
+        alert('No se pudo cargar el reporte. Si tu sesión venció, sal y vuelve a entrar.')
+      })
   }
 
   // Descargar el CSV. Como el endpoint está protegido, no sirve un <a href> normal
   // (no mandaría el token); lo bajamos con fetch + un link temporal.
   function downloadCsv() {
     fetch(`${API_URL}/reports/sales.csv?date=${reportDate}`, { headers: authHeaders })
-      .then((r) => r.blob())
+      .then((r) => {
+        if (!r.ok) throw new Error('csv failed')
+        return r.blob()
+      })
       .then((blob) => {
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -177,7 +186,7 @@ function Admin() {
         a.click()
         URL.revokeObjectURL(url)
       })
-      .catch(() => alert('No se pudo descargar el CSV'))
+      .catch(() => alert('No se pudo descargar el CSV. Si tu sesión venció, sal y vuelve a entrar.'))
   }
 
   function changePrice(id: number, price: number) {
