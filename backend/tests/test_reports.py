@@ -33,6 +33,14 @@ def test_manual_payment_creates_approved(client, db_session, seed_table):
     assert body["amount"] == 12000  # monto del servidor
 
 
+def test_manual_payment_accepts_the_five_methods(client, db_session, seed_table):
+    for method in ["efectivo", "datafono", "nequi", "daviplata", "bre_b"]:
+        order = _order(db_session, seed_table, 5000)
+        r = client.post("/payments/manual", json={"order_id": order.id, "method": method})
+        assert r.status_code == 200, method
+        assert r.json()["method"] == method
+
+
 def test_manual_payment_rejects_invalid_method(client, db_session, seed_table):
     order = _order(db_session, seed_table, 12000)
     r = client.post("/payments/manual", json={"order_id": order.id, "method": "bitcoin"})

@@ -28,6 +28,7 @@ interface SalesReport {
 const METHOD_LABELS: Record<string, string> = {
   bre_b: 'Bre-B / QR',
   nequi: 'Nequi',
+  daviplata: 'Daviplata',
   card: 'Tarjeta',
   efectivo: 'Efectivo',
   datafono: 'Datáfono',

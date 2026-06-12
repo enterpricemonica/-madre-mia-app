@@ -29,6 +29,16 @@ const NEXT_STATUS: Record<string, { next: string; label: string }> = {
   ready: { next: 'delivered', label: 'Marcar entregado' },
 }
 
+// Métodos de pago manuales que la cocina puede marcar (el cliente paga por su cuenta).
+type ManualMethod = 'efectivo' | 'datafono' | 'nequi' | 'daviplata' | 'bre_b'
+const MANUAL_METHODS: { key: ManualMethod; label: string }[] = [
+  { key: 'efectivo', label: '💵 Efectivo' },
+  { key: 'datafono', label: '💳 Datáfono' },
+  { key: 'nequi', label: '💜 Nequi' },
+  { key: 'daviplata', label: '💙 Daviplata' },
+  { key: 'bre_b', label: '📲 Bre-B' },
+]
+
 function Kitchen() {
   const [orders, setOrders] = useState<Order[]>([])
 
@@ -55,8 +65,8 @@ function Kitchen() {
     }).then(() => loadOrders())
   }
 
-  // Registrar cómo pagó (efectivo/datáfono) y recargar.
-  function recordPayment(orderId: number, method: 'efectivo' | 'datafono') {
+  // Registrar cómo pagó y recargar.
+  function recordPayment(orderId: number, method: ManualMethod) {
     fetch(`${API_URL}/payments/manual`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -111,18 +121,15 @@ function Kitchen() {
               ) : (
                 <>
                   <span className="pay-ask-label">¿Cómo pagó?</span>
-                  <button
-                    className="pay-btn"
-                    onClick={() => recordPayment(order.id, 'efectivo')}
-                  >
-                    💵 Efectivo
-                  </button>
-                  <button
-                    className="pay-btn"
-                    onClick={() => recordPayment(order.id, 'datafono')}
-                  >
-                    💳 Datáfono
-                  </button>
+                  {MANUAL_METHODS.map((m) => (
+                    <button
+                      key={m.key}
+                      className="pay-btn"
+                      onClick={() => recordPayment(order.id, m.key)}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
                 </>
               )}
             </div>

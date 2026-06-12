@@ -10,7 +10,8 @@ router = APIRouter(prefix="/payments", tags=["Payments"])
 VALID_METHODS = ["bre_b", "nequi", "card"]
 
 # Métodos manuales (los registra la cocina al cerrar el pedido).
-VALID_MANUAL_METHODS = ["efectivo", "datafono"]
+# El cliente paga por su cuenta (transferencia/efectivo) y la cocina solo MARCA cuál fue.
+VALID_MANUAL_METHODS = ["efectivo", "datafono", "nequi", "daviplata", "bre_b"]
 
 
 # POST /payments — inicia el cobro de un pedido.
