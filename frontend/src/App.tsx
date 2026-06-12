@@ -30,6 +30,7 @@ function App() {
   const toast = useToast()
   const tableNumber = getTableNumberFromUrl()
   const [menu, setMenu] = useState<MenuItem[]>([])
+  const [loading, setLoading] = useState(true) // true mientras carga el menú
 
   // El carrito: un objeto que relaciona el id del item -> cantidad.
   // Ejemplo: { 2: 3, 4: 1 } = 3 arepas (id 2) y 1 bandeja (id 4).
@@ -46,6 +47,8 @@ function App() {
     fetch(`${API_URL}/menu/`)
       .then((response) => response.json())
       .then((data: MenuItem[]) => setMenu(data))
+      .catch(() => {})
+      .finally(() => setLoading(false)) // pase lo que pase, dejamos de "cargar"
   }, [])
 
   // Traducir el NÚMERO de la mesa (de la URL) a su ID interno,
@@ -138,7 +141,18 @@ function App() {
       </nav>
 
       <main className="menu">
-        {categories.map((category) => (
+        {loading
+          ? [...Array(5)].map((_, i) => (
+              <div key={i} className="skel-card">
+                <div className="skel-img" />
+                <div className="skel-info">
+                  <div className="skel-line skel-line-name" />
+                  <div className="skel-line skel-line-desc" />
+                  <div className="skel-line skel-line-price" />
+                </div>
+              </div>
+            ))
+          : categories.map((category) => (
           <section id={`cat-${slug(category)}`} key={category}>
             <h2 className="category-title">{category}</h2>
             {menu

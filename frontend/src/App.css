@@ -225,6 +225,67 @@
     transition: none;
   }
 }
+
+/* ── Skeletons (tarjetas fantasma mientras carga el menú) ── */
+.skel-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.skel-img {
+  width: 76px;
+  height: 76px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.skel-info {
+  flex: 1;
+}
+.skel-line {
+  height: 12px;
+  border-radius: 6px;
+  margin: 10px 0;
+}
+.skel-line-name {
+  width: 55%;
+}
+.skel-line-desc {
+  width: 90%;
+}
+.skel-line-price {
+  width: 30%;
+}
+/* Brillo "shimmer" que recorre los fantasmas */
+.skel-img,
+.skel-line {
+  background: linear-gradient(
+    90deg,
+    var(--border) 25%,
+    var(--bg) 50%,
+    var(--border) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.3s infinite;
+}
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skel-img,
+  .skel-line {
+    animation: none;
+  }
+}
 .send-btn {
   border: none;
   border-radius: 12px;
