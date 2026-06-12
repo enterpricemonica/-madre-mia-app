@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import './Kitchen.css'
+import { useToast } from './Toast.tsx'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -40,6 +41,7 @@ const MANUAL_METHODS: { key: ManualMethod; label: string }[] = [
 ]
 
 function Kitchen() {
+  const toast = useToast()
   const [orders, setOrders] = useState<Order[]>([])
 
   // Pide los pedidos al backend
@@ -71,7 +73,10 @@ function Kitchen() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ order_id: orderId, method }),
-    }).then(() => loadOrders())
+    }).then(() => {
+      toast('Pago registrado ✅')
+      loadOrders()
+    })
   }
 
   // Un pedido sale de la cocina solo cuando está ENTREGADO **y** PAGADO.

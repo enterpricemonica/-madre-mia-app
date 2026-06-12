@@ -17,16 +17,21 @@ import models
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
 
+# Colombia está en UTC-5 (sin horario de verano). created_at se guarda en UTC,
+# así que 00:00 en Colombia = 05:00 en UTC. Con esto el cuadre del día es correcto.
+COLOMBIA_OFFSET = timedelta(hours=5)
+
+
 def _parse_date(date_str):
-    """El día pedido (YYYY-MM-DD); si no viene, hoy."""
-    return date_cls.fromisoformat(date_str) if date_str else date_cls.today()
+    """El día pedido (YYYY-MM-DD); si no viene, HOY en hora de Colombia."""
+    if date_str:
+        return date_cls.fromisoformat(date_str)
+    return (datetime.utcnow() - COLOMBIA_OFFSET).date()
 
 
 def _sales_summary(db: Session, day):
-    # OJO zona horaria: created_at se guarda en UTC y aquí usamos límites en UTC.
-    # Para Colombia (UTC-5) el cuadre de la noche puede caer al día siguiente.
-    # TODO: ajustar a hora de Colombia (restar 5h) en una mejora futura.
-    start = datetime(day.year, day.month, day.day)
+    # 'day' es una fecha de Colombia; convertimos sus límites a UTC para comparar.
+    start = datetime(day.year, day.month, day.day) + COLOMBIA_OFFSET
     end = start + timedelta(days=1)
 
     payments = (

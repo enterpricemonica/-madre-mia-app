@@ -56,7 +56,7 @@ def test_manual_payment_no_double_pay(client, db_session, seed_table):
 
 # ── Reporte ──
 def test_sales_report_groups_by_method(client, db_session, seed_table):
-    today = datetime.utcnow().date()
+    today = (datetime.utcnow() - timedelta(hours=5)).date()  # hoy en Colombia
     o1 = _order(db_session, seed_table, 10000)
     o2 = _order(db_session, seed_table, 5000)
     o3 = _order(db_session, seed_table, 8000)
@@ -74,7 +74,7 @@ def test_sales_report_groups_by_method(client, db_session, seed_table):
 
 
 def test_sales_report_ignores_other_days(client, db_session, seed_table):
-    today = datetime.utcnow().date()
+    today = (datetime.utcnow() - timedelta(hours=5)).date()  # hoy en Colombia
     o1 = _order(db_session, seed_table, 10000)
     o2 = _order(db_session, seed_table, 7000)
     _approved_payment(db_session, o1, "efectivo", 10000)
@@ -85,7 +85,7 @@ def test_sales_report_ignores_other_days(client, db_session, seed_table):
 
 
 def test_sales_report_ignores_pending(client, db_session, seed_table):
-    today = datetime.utcnow().date()
+    today = (datetime.utcnow() - timedelta(hours=5)).date()  # hoy en Colombia
     o1 = _order(db_session, seed_table, 10000)
     _approved_payment(db_session, o1, "efectivo", 10000)
     o2 = _order(db_session, seed_table, 9999)
@@ -97,7 +97,7 @@ def test_sales_report_ignores_pending(client, db_session, seed_table):
 
 
 def test_sales_csv_download(client, db_session, seed_table):
-    today = datetime.utcnow().date()
+    today = (datetime.utcnow() - timedelta(hours=5)).date()  # hoy en Colombia
     o1 = _order(db_session, seed_table, 10000)
     _approved_payment(db_session, o1, "efectivo", 10000)
     r = client.get(f"/reports/sales.csv?date={today.isoformat()}")

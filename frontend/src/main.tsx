@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.tsx'
 import Kitchen from './Kitchen.tsx'
 import Admin from './Admin.tsx'
+import { ToastProvider } from './Toast.tsx'
 
 // Aplica el tema (colores) guardado en el backend a TODA la app.
 // Sobreescribe las variables CSS (--primary, etc.) que index.css usa.
@@ -28,6 +29,8 @@ if (path.startsWith('/cocina')) screen = <Kitchen />
 else if (path.startsWith('/admin')) screen = <Admin />
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>{screen}</StrictMode>,
+  <StrictMode>
+    <ToastProvider>{screen}</ToastProvider>
+  </StrictMode>,
 )
 

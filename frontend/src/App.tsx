@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import './App.css'
+import { useToast } from './Toast.tsx'
 
 // La forma de un item del menú (coincide con el backend)
 interface MenuItem {
@@ -26,6 +27,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const slug = (s: string) => s.replace(/\s+/g, '-')
 
 function App() {
+  const toast = useToast()
   const tableNumber = getTableNumberFromUrl()
   const [menu, setMenu] = useState<MenuItem[]>([])
 
@@ -79,7 +81,7 @@ function App() {
   function sendOrder() {
     // Si todavía no sabemos el id de la mesa (o el QR es inválido), no enviamos.
     if (tableId === null) {
-      alert('No se reconoció la mesa. Revisa el código QR.')
+      toast('No se reconoció la mesa. Revisa el código QR.', 'error')
       return
     }
 
@@ -100,12 +102,12 @@ function App() {
     })
       .then((response) => response.json())
       .then((order) => {
-        alert('¡Pedido enviado! #' + order.id)
+        toast('¡Pedido enviado! #' + order.id)
         setCart({})
       })
       .catch((error) => {
         console.error('Error al enviar el pedido:', error)
-        alert('No se pudo enviar el pedido')
+        toast('No se pudo enviar el pedido', 'error')
       })
   }
 
@@ -181,7 +183,9 @@ function App() {
             <span className="cart-count">
               {itemCount} {itemCount === 1 ? 'producto' : 'productos'}
             </span>
-            <span className="cart-total">${total.toLocaleString('es-CO')}</span>
+            <span className="cart-total" key={total}>
+              ${total.toLocaleString('es-CO')}
+            </span>
           </div>
           <button className="send-btn" onClick={sendOrder}>
             Enviar pedido

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import './Admin.css'
+import { useToast } from './Toast.tsx'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -89,6 +90,7 @@ function Login({ onLogin }: { onLogin: (token: string) => void }) {
 }
 
 function Admin() {
+  const toast = useToast()
   // El token vive en localStorage para no perderlo al recargar la página.
   const [token, setToken] = useState<string | null>(() =>
     localStorage.getItem('token')
@@ -101,7 +103,13 @@ function Admin() {
   // Reportes de ventas
   const [showReports, setShowReports] = useState(false)
   const [report, setReport] = useState<SalesReport | null>(null)
-  const [reportDate, setReportDate] = useState(() => new Date().toISOString().slice(0, 10))
+  // Fecha local del dispositivo (en Colombia = fecha colombiana), formato YYYY-MM-DD.
+  const [reportDate, setReportDate] = useState(() => {
+    const d = new Date()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    return `${d.getFullYear()}-${mm}-${dd}`
+  })
 
   // Headers con el token, para las acciones protegidas
   const authHeaders = {
@@ -151,9 +159,9 @@ function Admin() {
         for (const [name, value] of Object.entries(saved)) {
           root.style.setProperty(`--${name}`, value)
         }
-        alert('Tema guardado ✅')
+        toast('Tema guardado ✅')
       })
-      .catch(() => alert('No se pudo guardar el tema'))
+      .catch(() => toast('No se pudo guardar el tema', 'error'))
   }
 
   // ── Reportes de ventas ──
@@ -166,7 +174,7 @@ function Admin() {
       .then(setReport)
       .catch(() => {
         setReport(null) // no dejamos datos inválidos que rompan la pantalla
-        alert('No se pudo cargar el reporte. Si tu sesión venció, sal y vuelve a entrar.')
+        toast('No se pudo cargar el reporte. ¿Sesión vencida? Sal y vuelve a entrar.', 'error')
       })
   }
 
@@ -186,7 +194,7 @@ function Admin() {
         a.click()
         URL.revokeObjectURL(url)
       })
-      .catch(() => alert('No se pudo descargar el CSV. Si tu sesión venció, sal y vuelve a entrar.'))
+      .catch(() => toast('No se pudo descargar el CSV. ¿Sesión vencida? Sal y vuelve a entrar.', 'error'))
   }
 
   function changePrice(id: number, price: number) {
@@ -223,7 +231,7 @@ function Admin() {
 
   function addItem() {
     if (!newItem.name || !newItem.category) {
-      alert('El plato necesita al menos nombre y categoría')
+      toast('El plato necesita al menos nombre y categoría', 'error')
       return
     }
     fetch(`${API_URL}/menu/`, {
