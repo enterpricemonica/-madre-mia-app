@@ -104,3 +104,4 @@ class Theme(Base):
     light     = Column(String, default="#fff8f0")
     dark      = Column(String, default="#2e2a26")
     logo_url  = Column(String, default="/logo.jpeg")  # ruta/URL del logo (editable desde admin)
+    bold_enabled = Column(Boolean, default=False)     # ¿este negocio cobra con Bold (datáfono)?

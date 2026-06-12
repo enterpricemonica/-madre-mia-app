@@ -107,7 +107,7 @@ class PaymentWebhook(BaseModel):
 class BoldCheckoutCreate(BaseModel):
     order_id: int
     payment_method: str  # POS / NEQUI / DAVIPLATA / PAY_BY_LINK
-    user_email: str
+    user_email: str = "pos@madremia.co"  # la cocina no pide email; default para el recibo
 
 # Respuesta: el pago creado + el integration_id que devuelve Bold.
 class BoldCheckoutOut(PaymentOut):
@@ -141,6 +141,7 @@ class ThemeOut(BaseModel):
     light: str
     dark: str
     logo_url: str = "/logo.jpeg"
+    bold_enabled: bool = False
     class Config:
         from_attributes = True
 

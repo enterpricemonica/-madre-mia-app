@@ -121,3 +121,11 @@
   padding: 6px 12px;
   border-radius: 10px;
 }
+.charging-badge {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--warning);
+  background: var(--bg);
+  padding: 6px 12px;
+  border-radius: 10px;
+}

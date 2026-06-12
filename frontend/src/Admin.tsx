@@ -99,6 +99,8 @@ function Admin() {
   const [newItem, setNewItem] = useState(EMPTY_NEW)
   const [theme, setTheme] = useState<Record<string, string> | null>(null)
   const [showTheme, setShowTheme] = useState(false) // panel de tema oculto por defecto
+  const [boldEnabled, setBoldEnabled] = useState(false) // ¿el negocio cobra con Bold?
+  const [showSettings, setShowSettings] = useState(false) // panel de configuración (⚙️)
 
   // Reportes de ventas
   const [showReports, setShowReports] = useState(false)
@@ -132,7 +134,10 @@ function Admin() {
       loadItems()
       fetch(`${API_URL}/settings/theme`)
         .then((r) => r.json())
-        .then(setTheme)
+        .then((data) => {
+          setTheme(data)
+          setBoldEnabled(!!data.bold_enabled) // prendido/apagado del cobro Bold
+        })
     }
   }, [token])
 
@@ -148,7 +153,7 @@ function Admin() {
     fetch(`${API_URL}/settings/theme`, {
       method: 'PUT',
       headers: authHeaders,
-      body: JSON.stringify(theme),
+      body: JSON.stringify({ ...theme, bold_enabled: boldEnabled }),
     })
       .then((r) => {
         if (!r.ok) throw new Error('save failed')
@@ -162,6 +167,23 @@ function Admin() {
         toast('Tema guardado ✅')
       })
       .catch(() => toast('No se pudo guardar el tema', 'error'))
+  }
+
+  // Prender/apagar el cobro con Bold y guardarlo de una (sin botón extra).
+  function setBold(value: boolean) {
+    if (!theme) return
+    setBoldEnabled(value)
+    fetch(`${API_URL}/settings/theme`, {
+      method: 'PUT',
+      headers: authHeaders,
+      body: JSON.stringify({ ...theme, bold_enabled: value }),
+    })
+      .then((r) => {
+        if (!r.ok) throw new Error('save failed')
+        return r.json()
+      })
+      .then(() => toast(value ? 'Cobro con Bold activado 🤖' : 'Cobro con Bold desactivado'))
+      .catch(() => toast('No se pudo guardar la configuración', 'error'))
   }
 
   // ── Reportes de ventas ──
@@ -278,6 +300,13 @@ function Admin() {
           >
             🎨
           </button>
+          <button
+            className="icon-btn"
+            onClick={() => setShowSettings((s) => !s)}
+            title="Configuración"
+          >
+            ⚙️
+          </button>
           <button className="logout" onClick={logout}>
             Salir
           </button>
@@ -317,6 +346,25 @@ function Admin() {
           )}
 
           <button onClick={saveTheme}>Guardar tema</button>
+        </div>
+      )}
+
+      {/* ── Configuración del negocio — se muestra al tocar ⚙️ ── */}
+      {showSettings && theme && (
+        <div className="theme-form">
+          <h2>⚙️ Configuración</h2>
+          <label className="bold-toggle">
+            <input
+              type="checkbox"
+              checked={boldEnabled}
+              onChange={(e) => setBold(e.target.checked)}
+            />
+            <span>🤖 Usar cobro con Bold (datáfono)</span>
+          </label>
+          <p className="settings-hint">
+            Si está prendido, el botón “Datáfono” de la cocina cobra automáticamente con Bold.
+            Si está apagado, solo marca el pago manualmente.
+          </p>
         </div>
       )}
 

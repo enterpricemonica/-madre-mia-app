@@ -43,12 +43,22 @@ const MANUAL_METHODS: { key: ManualMethod; label: string }[] = [
 function Kitchen() {
   const toast = useToast()
   const [orders, setOrders] = useState<Order[]>([])
+  const [boldEnabled, setBoldEnabled] = useState(false) // ¿el negocio cobra con Bold?
+  const [charging, setCharging] = useState<Set<number>>(new Set()) // pedidos cobrándose ahora
 
   // Pide los pedidos al backend
   function loadOrders() {
     fetch(`${API_URL}/orders/`)
       .then((r) => r.json())
-      .then((data: Order[]) => setOrders(data))
+      .then((data: Order[]) => {
+        setOrders(data)
+        // Si un pedido ya quedó pagado, ya no está "cobrando".
+        setCharging((prev) => {
+          const next = new Set(prev)
+          for (const o of data) if (o.is_paid) next.delete(o.id)
+          return next
+        })
+      })
   }
 
   // Al cargar: trae los pedidos YA, y luego repite cada 5 segundos (polling).
@@ -56,6 +66,14 @@ function Kitchen() {
     loadOrders()
     const interval = setInterval(loadOrders, 5000)
     return () => clearInterval(interval) // limpiar el intervalo al salir
+  }, [])
+
+  // ¿Este negocio tiene activado el cobro con Bold? (lo decide el switch del admin)
+  useEffect(() => {
+    fetch(`${API_URL}/settings/theme`)
+      .then((r) => r.json())
+      .then((s) => setBoldEnabled(!!s.bold_enabled))
+      .catch(() => {})
   }, [])
 
   // Avanzar el estado de un pedido y recargar
@@ -77,6 +95,36 @@ function Kitchen() {
       toast('Pago registrado ✅')
       loadOrders()
     })
+  }
+
+  // Iniciar el cobro REAL con Bold (datáfono). El resultado llega por webhook → el polling lo refleja.
+  function startBoldCharge(orderId: number) {
+    setCharging((prev) => new Set(prev).add(orderId))
+    toast('Cobrando en el datáfono… 💳')
+    fetch(`${API_URL}/payments/bold`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order_id: orderId, payment_method: 'POS' }),
+    })
+      .then((r) => {
+        if (!r.ok) throw new Error('bold failed')
+      })
+      .catch(() => {
+        toast('No se pudo iniciar el cobro con Bold', 'error')
+        setCharging((prev) => {
+          const next = new Set(prev)
+          next.delete(orderId)
+          return next
+        })
+      })
+    // Si Bold rechaza o no llega el pago, liberamos los botones tras 60s para reintentar.
+    setTimeout(() => {
+      setCharging((prev) => {
+        const next = new Set(prev)
+        next.delete(orderId)
+        return next
+      })
+    }, 60000)
   }
 
   // Un pedido sale de la cocina solo cuando está ENTREGADO **y** PAGADO.
@@ -123,6 +171,8 @@ function Kitchen() {
             <div className="pay-row">
               {order.is_paid ? (
                 <span className="paid-badge">💵 Pagado</span>
+              ) : charging.has(order.id) ? (
+                <span className="charging-badge">💳 Cobrando en el datáfono…</span>
               ) : (
                 <>
                   <span className="pay-ask-label">¿Cómo pagó?</span>
@@ -130,7 +180,11 @@ function Kitchen() {
                     <button
                       key={m.key}
                       className="pay-btn"
-                      onClick={() => recordPayment(order.id, m.key)}
+                      onClick={() =>
+                        m.key === 'datafono' && boldEnabled
+                          ? startBoldCharge(order.id) // 🤖 cobro real con Bold
+                          : recordPayment(order.id, m.key) // marca manual (como hoy)
+                      }
                     >
                       {m.label}
                     </button>
