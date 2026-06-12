@@ -32,5 +32,5 @@ def test_order_has_one_payment(db_session, seed_table):
     db_session.commit()
 
     db_session.refresh(order)
-    assert order.payment is not None
-    assert order.payment.method == "bre_b"
+    assert len(order.payments) == 1
+    assert order.payments[0].method == "bre_b"

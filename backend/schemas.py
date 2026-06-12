@@ -103,6 +103,24 @@ class PaymentWebhook(BaseModel):
     provider_ref: str
     status: str  # approved / declined
 
+# Iniciar un cobro con Bold (datáfono).
+class BoldCheckoutCreate(BaseModel):
+    order_id: int
+    payment_method: str  # POS / NEQUI / DAVIPLATA / PAY_BY_LINK
+    user_email: str
+
+# Respuesta: el pago creado + el integration_id que devuelve Bold.
+class BoldCheckoutOut(PaymentOut):
+    integration_id: str
+
+# Lo que Bold manda en el webhook con el resultado del datáfono.
+class BoldWebhook(BaseModel):
+    reference: str
+    status: str  # APPROVED / REJECTED
+    integration_id: Optional[str] = None
+    reason: Optional[str] = None
+    amount: Optional[int] = None
+
 # ── AUTH ──
 class LoginRequest(BaseModel):
     username: str

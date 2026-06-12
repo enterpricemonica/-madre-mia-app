@@ -40,12 +40,12 @@ class Order(Base):
 
     table      = relationship("Table", back_populates="orders")
     items      = relationship("OrderItem", back_populates="order")
-    payment    = relationship("Payment", back_populates="order", uselist=False)
+    payments   = relationship("Payment", back_populates="order")  # puede haber varios intentos
 
-    # "Pagado" se DERIVA del pago (pista aparte del flujo de cocina), no es un estado del pedido.
+    # "Pagado" se DERIVA de los pagos (pista aparte del flujo de cocina): basta uno aprobado.
     @property
     def is_paid(self):
-        return self.payment is not None and self.payment.status == "approved"
+        return any(p.status == "approved" for p in self.payments)
 
 
 class OrderItem(Base):
@@ -80,7 +80,7 @@ class Payment(Base):
     created_at   = Column(DateTime, default=datetime.utcnow)
     updated_at   = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    order        = relationship("Order", back_populates="payment")
+    order        = relationship("Order", back_populates="payments")
 
 
 class User(Base):

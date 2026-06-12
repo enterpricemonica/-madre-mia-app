@@ -1,10 +1,21 @@
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from database import get_db
 import models, schemas
 import payments_gateway
+import bold_gateway
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
+
+# Bold (datáfono) → método que usamos en el reporte de caja.
+BOLD_TO_METHOD = {
+    "POS": "datafono",
+    "NEQUI": "nequi",
+    "DAVIPLATA": "daviplata",
+    "PAY_BY_LINK": "card",
+}
 
 # Métodos que el cliente puede elegir en la app.
 VALID_METHODS = ["bre_b", "nequi", "card"]
@@ -84,6 +95,82 @@ def create_manual_payment(payload: schemas.ManualPaymentCreate, db: Session = De
     db.commit()
     db.refresh(payment)
     return payment
+
+
+# POST /payments/bold — inicia un cobro en el datáfono de Bold.
+@router.post("/bold", response_model=schemas.BoldCheckoutOut)
+def create_bold_payment(payload: schemas.BoldCheckoutCreate, db: Session = Depends(get_db)):
+    order = db.query(models.Order).filter(models.Order.id == payload.order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    if payload.payment_method not in BOLD_TO_METHOD:
+        raise HTTPException(status_code=400, detail=f"Bold payment method '{payload.payment_method}' is invalid.")
+
+    already = (
+        db.query(models.Payment)
+        .filter(models.Payment.order_id == order.id, models.Payment.status == "approved")
+        .first()
+    )
+    if already:
+        raise HTTPException(status_code=400, detail="Order already has an approved payment")
+
+    reference = str(uuid.uuid4())  # UUID único por orden → con esto casa el webhook
+    payment = models.Payment(
+        order_id=order.id,
+        amount=order.total,                      # SEGURIDAD: el monto sale del pedido
+        method=BOLD_TO_METHOD[payload.payment_method],
+        provider="bold",
+        status="pending",
+        provider_ref=reference,
+    )
+    db.add(payment)
+    db.flush()
+
+    try:
+        result = bold_gateway.create_checkout(
+            total_amount=order.total,
+            payment_method=payload.payment_method,
+            reference=reference,
+            user_email=payload.user_email,
+        )
+    except bold_gateway.BoldError as e:
+        db.rollback()  # no guardamos un cobro que Bold rechazó al iniciar
+        raise HTTPException(status_code=400, detail={"bold_error": e.detail})
+
+    db.commit()
+    db.refresh(payment)
+    return schemas.BoldCheckoutOut(
+        **schemas.PaymentOut.model_validate(payment).model_dump(),
+        integration_id=result["integration_id"],
+    )
+
+
+# POST /payments/bold/webhook — Bold nos avisa el resultado del datáfono.
+@router.post("/bold/webhook")
+def bold_webhook(event: schemas.BoldWebhook, request: Request, db: Session = Depends(get_db)):
+    # TODO seguridad: validar la FIRMA del webhook de Bold en sandbox/prod (el mock no firma).
+    payment = (
+        db.query(models.Payment)
+        .filter(models.Payment.provider_ref == event.reference)
+        .first()
+    )
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+
+    # IDEMPOTENCIA: el webhook puede llegar repetido; si ya está aprobado, no repetimos.
+    if payment.status == "approved":
+        return {"status": "already_processed"}
+
+    if event.status == "APPROVED":
+        payment.status = "approved"
+    elif event.status == "REJECTED":
+        payment.status = "declined"
+    else:
+        raise HTTPException(status_code=400, detail=f"Unknown webhook status '{event.status}'")
+
+    db.commit()
+    return {"status": payment.status}
 
 
 # POST /payments/webhook — la pasarela nos avisa el resultado del pago.
