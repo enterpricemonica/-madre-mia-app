@@ -119,6 +119,18 @@ class BoldWebhook(BaseModel):
     status: str  # APPROVED / REJECTED
     integration_id: Optional[str] = None
     reason: Optional[str] = None
+
+# Iniciar un cobro online con Wompi (el cliente paga desde su celular).
+class WompiCheckoutCreate(BaseModel):
+    order_id: int
+
+# Respuesta: el pago creado + lo que el Widget de Wompi necesita en el front (ya firmado).
+class WompiCheckoutOut(PaymentOut):
+    public_key: str
+    currency: str
+    amount_in_cents: int
+    reference: str
+    signature: str
     amount: Optional[int] = None
 
 # ── AUTH ──

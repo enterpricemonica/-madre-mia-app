@@ -6,6 +6,7 @@ from database import get_db
 import models, schemas
 import payments_gateway
 import bold_gateway
+import wompi_gateway
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
 
@@ -146,6 +147,82 @@ def create_bold_payment(payload: schemas.BoldCheckoutCreate, db: Session = Depen
     )
 
 
+# POST /payments/wompi — inicia un cobro ONLINE (el cliente paga desde su celular con el Widget).
+@router.post("/wompi", response_model=schemas.WompiCheckoutOut)
+def create_wompi_payment(payload: schemas.WompiCheckoutCreate, db: Session = Depends(get_db)):
+    order = db.query(models.Order).filter(models.Order.id == payload.order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    already = (
+        db.query(models.Payment)
+        .filter(models.Payment.order_id == order.id, models.Payment.status == "approved")
+        .first()
+    )
+    if already:
+        raise HTTPException(status_code=400, detail="Order already has an approved payment")
+
+    reference = str(uuid.uuid4())  # UUID único por compra → con esto casa el webhook
+    payment = models.Payment(
+        order_id=order.id,
+        amount=order.total,    # SEGURIDAD: el monto sale del pedido, no del cliente
+        method=None,           # con Wompi el método (Nequi/PSE/tarjeta) se sabe al verificar
+        provider="wompi",
+        status="pending",
+        provider_ref=reference,
+    )
+    db.add(payment)
+    db.flush()
+
+    # Arma+firma los datos para el Widget. OJO: NO llama a Wompi por red (a diferencia de Bold).
+    checkout = wompi_gateway.prepare_checkout(reference=reference, amount_cop=order.total)
+
+    db.commit()
+    db.refresh(payment)
+    return schemas.WompiCheckoutOut(
+        **schemas.PaymentOut.model_validate(payment).model_dump(),
+        **checkout,
+    )
+
+
+# POST /payments/wompi/webhook — Wompi nos avisa que una transacción cambió de estado.
+@router.post("/wompi/webhook")
+def wompi_webhook(event: dict, db: Session = Depends(get_db)):
+    # SEGURIDAD 1: validar la firma de EVENTOS (distinta de la de integridad).
+    # Si no cuadra, alguien está intentando falsificar un "pagado" → fuera.
+    if not wompi_gateway.verify_event_signature(event):
+        raise HTTPException(status_code=401, detail="Invalid signature")
+
+    transaction = event.get("data", {}).get("transaction", {})
+    payment = (
+        db.query(models.Payment)
+        .filter(models.Payment.provider_ref == transaction.get("reference"))
+        .first()
+    )
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+
+    # IDEMPOTENCIA: el webhook puede llegar repetido; si ya está aprobado, no repetimos.
+    if payment.status == "approved":
+        return {"status": "already_processed"}
+
+    # SEGURIDAD 2 (fuente de verdad): no le creemos al body; le preguntamos a Wompi
+    # directamente cuál es el estado real de la transacción.
+    tx = wompi_gateway.get_transaction(transaction["id"])
+
+    if tx["status"] == "APPROVED":
+        payment.status = "approved"
+        # Ahora sí sabemos el método real (Nequi/PSE/tarjeta) → lo guardamos para el reporte.
+        payment.method = (tx.get("payment_method_type") or "").lower() or None
+    elif tx["status"] in ("DECLINED", "ERROR", "VOIDED"):
+        payment.status = "declined"
+    else:
+        return {"status": payment.status}  # PENDING u otro → lo dejamos pendiente
+
+    db.commit()
+    return {"status": payment.status}
+
+
 # POST /payments/bold/webhook — Bold nos avisa el resultado del datáfono.
 @router.post("/bold/webhook")
 def bold_webhook(event: schemas.BoldWebhook, request: Request, db: Session = Depends(get_db)):
@@ -208,9 +285,17 @@ def payment_webhook(event: schemas.PaymentWebhook, request: Request, db: Session
 # GET /payments/{order_id}/status — respaldo: la pantalla consulta el estado del pago.
 @router.get("/{order_id}/status", response_model=schemas.PaymentOut)
 def payment_status(order_id: int, db: Session = Depends(get_db)):
-    payment = (
+    # Un pedido puede tener VARIOS pagos (ej. un intento rechazado + un reintento).
+    # Priorizamos un pago aprobado (es terminal y único); si no hay, el más reciente.
+    approved = (
+        db.query(models.Payment)
+        .filter(models.Payment.order_id == order_id, models.Payment.status == "approved")
+        .first()
+    )
+    payment = approved or (
         db.query(models.Payment)
         .filter(models.Payment.order_id == order_id)
+        .order_by(models.Payment.id.desc())  # el más reciente = el último intento
         .first()
     )
     if not payment:

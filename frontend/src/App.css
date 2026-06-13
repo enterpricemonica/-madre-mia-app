@@ -300,3 +300,69 @@
 .send-btn:hover {
   background: var(--accent-dark);
 }
+
+/* ── Pantalla de confirmación del pago ── */
+.pay-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+.pay-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 36px 28px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+.pay-card h2 {
+  margin: 16px 0 8px;
+  color: var(--dark);
+}
+.pay-card p {
+  margin: 0 0 20px;
+  color: #555;
+}
+.pay-card .send-btn {
+  width: 100%;
+}
+/* Spinner girando mientras esperamos la confirmación */
+.pay-spinner {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto;
+  border: 6px solid #eee;
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: pay-spin 0.9s linear infinite;
+}
+@keyframes pay-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* Ícono grande de éxito (✓) o fallo (✕) */
+.pay-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  font-weight: 900;
+  color: #fff;
+}
+.pay-ok {
+  background: #16a34a;
+}
+.pay-fail {
+  background: #dc2626;
+}

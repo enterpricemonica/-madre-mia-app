@@ -43,6 +43,23 @@ function App() {
   // Categoría activa (para resaltar el chip que se tocó)
   const [activeCat, setActiveCat] = useState('')
 
+  // El último pedido creado, para ofrecer pagarlo. null = aún no se ha enviado.
+  const [order, setOrder] = useState<{ id: number; total: number } | null>(null)
+
+  // Estado del pago para la pantalla de confirmación:
+  //   idle = sin pagar · waiting = esperando confirmación · approved/declined = resultado
+  const [payState, setPayState] = useState<
+    'idle' | 'waiting' | 'approved' | 'declined' | 'timeout'
+  >('idle')
+
+  // Cargar el script del Widget de Wompi una sola vez (solo el cliente lo necesita).
+  useEffect(() => {
+    const script = document.createElement('script')
+    script.src = 'https://checkout.wompi.co/widget.js'
+    script.async = true
+    document.body.appendChild(script)
+  }, [])
+
   // Traer el menú al cargar la pantalla
   useEffect(() => {
     fetch(`${API_URL}/menu/`)
@@ -115,14 +132,78 @@ function App() {
       body: JSON.stringify(payload),
     })
       .then((response) => response.json())
-      .then((order) => {
-        toast('¡Pedido enviado! #' + order.id)
+      .then((newOrder) => {
+        toast('¡Pedido enviado! #' + newOrder.id)
+        setOrder({ id: newOrder.id, total }) // guardamos el total antes de vaciar
         setCart({})
       })
       .catch((error) => {
         console.error('Error al enviar el pedido:', error)
         toast('No se pudo enviar el pedido', 'error')
       })
+  }
+
+  // Pagar el pedido con Wompi (el cliente paga desde SU celular con el Widget).
+  function payWithWompi() {
+    if (!order) return
+    const orderId = order.id
+
+    // 1) Pedirle al backend el cobro YA FIRMADO (referencia + monto en centavos + firma).
+    fetch(`${API_URL}/payments/wompi`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order_id: orderId }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        // 2) Abrir el Widget. Mapear snake_case (backend) → camelCase (Wompi).
+        //    OJO: la firma va ANIDADA en signature.integrity.
+        const WidgetCheckout = (window as any).WidgetCheckout
+        const checkout = new WidgetCheckout({
+          currency: data.currency,
+          amountInCents: data.amount_in_cents,
+          reference: data.reference,
+          publicKey: data.public_key,
+          signature: { integrity: data.signature },
+        })
+
+        // 3) Cuando el cliente cierra el Widget, empezamos a esperar la confirmación.
+        //    La verdad la pone el WEBHOOK en el backend → la consultamos con polling.
+        checkout.open((result: any) => {
+          const tx = result?.transaction
+          if (tx?.status === 'APPROVED') {
+            setPayState('waiting')
+            pollPaymentStatus(orderId)
+          } else {
+            setPayState('declined')
+          }
+        })
+      })
+      .catch(() => toast('No se pudo iniciar el pago', 'error'))
+  }
+
+  // Preguntarle al backend si el pago ya quedó aprobado (lo confirma el webhook).
+  // Reintenta cada 3s hasta ~1 minuto; si no, deja de insistir.
+  function pollPaymentStatus(orderId: number, attempt = 0) {
+    fetch(`${API_URL}/payments/${orderId}/status`)
+      .then((r) => r.json())
+      .then((p) => {
+        if (p.status === 'approved') return setPayState('approved')
+        if (p.status === 'declined') return setPayState('declined')
+        // sigue pendiente → reintentar, o rendirse tras ~1 min
+        if (attempt < 20) setTimeout(() => pollPaymentStatus(orderId, attempt + 1), 3000)
+        else setPayState('timeout')
+      })
+      .catch(() => {
+        if (attempt < 20) setTimeout(() => pollPaymentStatus(orderId, attempt + 1), 3000)
+        else setPayState('timeout')
+      })
+  }
+
+  // Volver a empezar tras un pago exitoso.
+  function resetForNewOrder() {
+    setOrder(null)
+    setPayState('idle')
   }
 
   return (
@@ -216,6 +297,64 @@ function App() {
             Enviar pedido
           </button>
         </footer>
+      )}
+
+      {/* Tras enviar el pedido (carrito vacío): ofrecer pagarlo con Wompi */}
+      {order && total === 0 && (
+        <footer className="cart-bar">
+          <div className="cart-bar-info">
+            <span className="cart-count">Pedido #{order.id}</span>
+            <span className="cart-total">${order.total.toLocaleString('es-CO')}</span>
+          </div>
+          <button className="send-btn" onClick={payWithWompi}>
+            Pagar con Wompi
+          </button>
+        </footer>
+      )}
+
+      {/* Pantalla de confirmación del pago (se muestra encima de todo) */}
+      {payState !== 'idle' && (
+        <div className="pay-overlay">
+          <div className="pay-card">
+            {payState === 'waiting' && (
+              <>
+                <div className="pay-spinner" />
+                <h2>Confirmando tu pago…</h2>
+                <p>Un momento, estamos verificando con el banco.</p>
+              </>
+            )}
+            {payState === 'approved' && (
+              <>
+                <div className="pay-icon pay-ok">✓</div>
+                <h2>¡Pago confirmado!</h2>
+                <p>Pedido #{order?.id} — ya está en cocina 🍳</p>
+                <button className="send-btn" onClick={resetForNewOrder}>
+                  Hacer otro pedido
+                </button>
+              </>
+            )}
+            {payState === 'declined' && (
+              <>
+                <div className="pay-icon pay-fail">✕</div>
+                <h2>El pago no se completó</h2>
+                <p>Puedes intentarlo de nuevo.</p>
+                <button className="send-btn" onClick={() => setPayState('idle')}>
+                  Reintentar
+                </button>
+              </>
+            )}
+            {payState === 'timeout' && (
+              <>
+                <div className="pay-icon pay-fail">⏳</div>
+                <h2>Estamos confirmando tu pago</h2>
+                <p>Está tardando más de lo normal. Si ya pagaste, avísale al personal.</p>
+                <button className="send-btn" onClick={() => setPayState('idle')}>
+                  Entendido
+                </button>
+              </>
+            )}
+          </div>
+        </div>
       )}
     </div>
   )
