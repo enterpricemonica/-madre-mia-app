@@ -35,7 +35,8 @@ class Order(Base):
     table_id   = Column(Integer, ForeignKey("tables.id"))
     status     = Column(String, default="received")
     order_type = Column(String, default="dine_in")  # dine_in (comer aquí) / takeaway (para llevar)
-    total      = Column(Integer, default=0)
+    total      = Column(Integer, default=0)           # valor del pedido (SIN propina)
+    tip_amount = Column(Integer, default=0)           # propina VOLUNTARIA del cliente (Ley 1935/2018, máx 10%)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     table      = relationship("Table", back_populates="orders")

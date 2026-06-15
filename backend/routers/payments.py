@@ -162,10 +162,19 @@ def create_wompi_payment(payload: schemas.WompiCheckoutCreate, db: Session = Dep
     if already:
         raise HTTPException(status_code=400, detail="Order already has an approved payment")
 
+    # Propina VOLUNTARIA (Ley 1935/2018). El cliente SÍ puede elegir el monto (a diferencia del
+    # precio base), pero el servidor valida que no pase del 10% del pedido (tope legal).
+    tip = payload.tip_amount or 0
+    max_tip = order.total // 10   # 10% del valor del pedido
+    if tip < 0 or tip > max_tip:
+        raise HTTPException(status_code=400, detail="Invalid tip amount (must be 0–10% of order)")
+    order.tip_amount = tip
+    amount_to_charge = order.total + tip   # lo que realmente se le cobra al cliente
+
     reference = str(uuid.uuid4())  # UUID único por compra → con esto casa el webhook
     payment = models.Payment(
         order_id=order.id,
-        amount=order.total,    # SEGURIDAD: el monto sale del pedido, no del cliente
+        amount=amount_to_charge,  # SEGURIDAD: base del pedido (servidor) + propina validada (≤10%)
         method=None,           # con Wompi el método (Nequi/PSE/tarjeta) se sabe al verificar
         provider="wompi",
         status="pending",
@@ -175,7 +184,7 @@ def create_wompi_payment(payload: schemas.WompiCheckoutCreate, db: Session = Dep
     db.flush()
 
     # Arma+firma los datos para el Widget. OJO: NO llama a Wompi por red (a diferencia de Bold).
-    checkout = wompi_gateway.prepare_checkout(reference=reference, amount_cop=order.total)
+    checkout = wompi_gateway.prepare_checkout(reference=reference, amount_cop=amount_to_charge)
 
     db.commit()
     db.refresh(payment)

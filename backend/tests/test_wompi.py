@@ -191,6 +191,29 @@ def test_create_wompi_payment_rejects_if_already_paid(client, db_session, seed_t
     assert r.status_code == 400
 
 
+def test_create_wompi_payment_with_tip_charges_total_plus_tip(client, db_session, seed_table, monkeypatch):
+    monkeypatch.setenv("WOMPI_PUBLIC_KEY", "pub_test_abc")
+    monkeypatch.setenv("WOMPI_INTEGRITY_SECRET", "s3cr3t")
+    order = _order(db_session, seed_table, 18000)
+
+    # propina de 1800 = 10% exacto (el tope legal); debe aceptarse
+    r = client.post("/payments/wompi", json={"order_id": order.id, "tip_amount": 1800})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["amount"] == 19800             # 18000 pedido + 1800 propina
+    assert body["amount_in_cents"] == 1980000  # lo que se le cobra al cliente en el Widget
+
+    db_session.refresh(order)
+    assert order.tip_amount == 1800            # queda guardada en el pedido (para reportes)
+
+
+def test_create_wompi_payment_rejects_tip_over_10pct(client, db_session, seed_table):
+    order = _order(db_session, seed_table, 18000)  # 10% = 1800
+    # 2000 supera el tope legal del 10% → debe rechazarse
+    r = client.post("/payments/wompi", json={"order_id": order.id, "tip_amount": 2000})
+    assert r.status_code == 400
+
+
 # ── Firma de eventos: acepta la buena, rechaza la alterada ──
 def test_verify_event_signature_accepts_valid():
     event = _signed_event()

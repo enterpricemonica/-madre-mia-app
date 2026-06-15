@@ -62,6 +62,7 @@ class OrderOut(BaseModel):
     order_type: str
     is_paid: bool = False         # derivado del pago (no es un estado de cocina)
     total: int
+    tip_amount: int = 0           # propina dejada por el cliente (para cocina/reportes)
     created_at: datetime
     items: List[OrderItemOut] = []
     class Config:
@@ -123,6 +124,7 @@ class BoldWebhook(BaseModel):
 # Iniciar un cobro online con Wompi (el cliente paga desde su celular).
 class WompiCheckoutCreate(BaseModel):
     order_id: int
+    tip_amount: int = 0   # propina voluntaria que eligió el cliente (el servidor valida que no pase del 10%)
 
 # Respuesta: el pago creado + lo que el Widget de Wompi necesita en el front (ya firmado).
 class WompiCheckoutOut(PaymentOut):

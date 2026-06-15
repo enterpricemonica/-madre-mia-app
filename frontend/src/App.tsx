@@ -46,6 +46,11 @@ function App() {
   // El último pedido creado, para ofrecer pagarlo. null = aún no se ha enviado.
   const [order, setOrder] = useState<{ id: number; total: number } | null>(null)
 
+  // Propina (Ley 1935/2018: voluntaria, máx 10%). null = el cliente aún no elige
+  // (NO se marca nada por defecto; la ley prohíbe agregarla sola). 'other' = monto a mano.
+  const [tipChoice, setTipChoice] = useState<'none' | 'p5' | 'p10' | 'other' | null>(null)
+  const [customTip, setCustomTip] = useState(0)
+
   // Estado del pago para la pantalla de confirmación:
   //   idle = sin pagar · waiting = esperando confirmación · approved/declined = resultado
   const [payState, setPayState] = useState<
@@ -144,15 +149,27 @@ function App() {
   }
 
   // Pagar el pedido con Wompi (el cliente paga desde SU celular con el Widget).
+  // Traduce la opción de propina a pesos. Topa en el 10% (tope legal) y usa floor
+  // para no pasarnos del máximo que valida el backend (order.total // 10).
+  function getTipAmount(): number {
+    if (!order) return 0
+    const maxTip = Math.floor(order.total * 0.1)
+    if (tipChoice === 'p5') return Math.floor(order.total * 0.05)
+    if (tipChoice === 'p10') return maxTip
+    if (tipChoice === 'other') return Math.min(Math.max(customTip, 0), maxTip)
+    return 0 // 'none' o aún sin elegir
+  }
+
   function payWithWompi() {
     if (!order) return
     const orderId = order.id
+    const tip = getTipAmount()
 
     // 1) Pedirle al backend el cobro YA FIRMADO (referencia + monto en centavos + firma).
     fetch(`${API_URL}/payments/wompi`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ order_id: orderId }),
+      body: JSON.stringify({ order_id: orderId, tip_amount: tip }),
     })
       .then((r) => r.json())
       .then((data) => {
@@ -204,6 +221,8 @@ function App() {
   function resetForNewOrder() {
     setOrder(null)
     setPayState('idle')
+    setTipChoice(null)   // limpiar la propina para el siguiente pedido
+    setCustomTip(0)
   }
 
   return (
@@ -299,18 +318,51 @@ function App() {
         </footer>
       )}
 
-      {/* Tras enviar el pedido (carrito vacío): ofrecer pagarlo con Wompi */}
-      {order && total === 0 && (
-        <footer className="cart-bar">
+      {/* Tras enviar el pedido (carrito vacío): elegir propina (voluntaria) y pagar con Wompi */}
+      {order && total === 0 && (() => {
+        const tip = getTipAmount()
+        const totalToPay = order.total + tip
+        const maxTip = Math.floor(order.total * 0.1)
+        return (
+        <footer className="cart-bar tip-bar">
+          <div className="tip-section">
+            <p className="tip-q">
+              ¿Deseas dejar propina? <small>voluntaria, para el equipo 🙌</small>
+            </p>
+            <div className="tip-options">
+              <button className={`tip-btn ${tipChoice === 'none' ? 'active' : ''}`} onClick={() => setTipChoice('none')}>No, gracias</button>
+              <button className={`tip-btn ${tipChoice === 'p5' ? 'active' : ''}`} onClick={() => setTipChoice('p5')}>5%</button>
+              <button className={`tip-btn ${tipChoice === 'p10' ? 'active' : ''}`} onClick={() => setTipChoice('p10')}>10%</button>
+              <button className={`tip-btn ${tipChoice === 'other' ? 'active' : ''}`} onClick={() => setTipChoice('other')}>Otro</button>
+            </div>
+            {tipChoice === 'other' && (
+              <div className="tip-custom">
+                <span>$</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={maxTip}
+                  value={customTip || ''}
+                  onChange={(e) => setCustomTip(Math.min(Math.max(parseInt(e.target.value) || 0, 0), maxTip))}
+                  placeholder={`Máx $${maxTip.toLocaleString('es-CO')}`}
+                />
+                <small>máx ${maxTip.toLocaleString('es-CO')} (10%)</small>
+              </div>
+            )}
+          </div>
           <div className="cart-bar-info">
             <span className="cart-count">Pedido #{order.id}</span>
-            <span className="cart-total">${order.total.toLocaleString('es-CO')}</span>
+            <div className="tip-breakdown">
+              {tip > 0 && <span className="tip-line">+ propina ${tip.toLocaleString('es-CO')}</span>}
+              <span className="cart-total">${totalToPay.toLocaleString('es-CO')}</span>
+            </div>
           </div>
-          <button className="send-btn" onClick={payWithWompi}>
-            Pagar con Wompi
+          <button className="send-btn" onClick={payWithWompi} disabled={tipChoice === null}>
+            {tipChoice === null ? 'Elige propina ↑' : 'Pagar con Wompi'}
           </button>
         </footer>
-      )}
+        )
+      })()}
 
       {/* Pantalla de confirmación del pago (se muestra encima de todo) */}
       {payState !== 'idle' && (

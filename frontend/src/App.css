@@ -196,6 +196,80 @@
   animation: total-bounce 0.3s ease; /* rebota cuando cambia el total */
 }
 
+/* ── Propina (voluntaria, Ley 1935/2018: el cliente elige, máx 10%) ── */
+.tip-bar {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+.tip-q {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.tip-q small {
+  font-weight: 400;
+  color: var(--muted);
+}
+.tip-options {
+  display: flex;
+  gap: 8px;
+}
+.tip-btn {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--dark);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tip-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.tip-custom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.tip-custom input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 15px;
+}
+.tip-custom small {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.tip-bar .cart-bar-info {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+.tip-breakdown {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.tip-line {
+  font-size: 12px;
+  color: var(--muted);
+}
+.send-btn:disabled {
+  background: var(--border);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
 /* Animaciones del carrito */
 @keyframes cart-slide-up {
   from {
