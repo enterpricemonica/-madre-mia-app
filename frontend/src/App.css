@@ -440,3 +440,58 @@
 .pay-fail {
   background: #dc2626;
 }
+/* El check de éxito entra con un "pop" alegre */
+.pay-ok-pop {
+  animation: pay-ok-pop 0.5s cubic-bezier(0.18, 1.25, 0.4, 1) both;
+}
+@keyframes pay-ok-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ── Confeti del pago exitoso (puro CSS, sin librerías) ── */
+.confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none; /* no estorba los clics del botón de abajo */
+  overflow: hidden;
+  z-index: 1001; /* por encima del overlay del pago */
+}
+.confetti-piece {
+  position: absolute;
+  top: -12px;
+  border-radius: 2px;
+  opacity: 0;
+  animation-name: confetti-fall;
+  animation-timing-function: ease-in;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-12px) rotateZ(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(105vh) rotateZ(600deg);
+    opacity: 1;
+  }
+}
+/* Accesibilidad: quien pidió menos movimiento no ve confeti ni pop */
+@media (prefers-reduced-motion: reduce) {
+  .confetti {
+    display: none;
+  }
+  .pay-ok-pop {
+    animation: none;
+  }
+}

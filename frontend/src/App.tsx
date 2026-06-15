@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import { useToast } from './Toast.tsx'
+import { Confetti } from './Confetti.tsx'
 
 // La forma de un item del menú (coincide con el backend)
 interface MenuItem {
@@ -377,7 +378,8 @@ function App() {
             )}
             {payState === 'approved' && (
               <>
-                <div className="pay-icon pay-ok">✓</div>
+                <Confetti />
+                <div className="pay-icon pay-ok pay-ok-pop">✓</div>
                 <h2>¡Pago confirmado!</h2>
                 <p>Pedido #{order?.id} — ya está en cocina 🍳</p>
                 <button className="send-btn" onClick={resetForNewOrder}>
