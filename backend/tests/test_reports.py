@@ -73,6 +73,19 @@ def test_sales_report_groups_by_method(client, db_session, seed_table):
     assert body["by_method"]["bre_b"] == 8000
 
 
+def test_sales_report_separates_tips_from_net_sales(client, db_session, seed_table):
+    today = (datetime.utcnow() - timedelta(hours=5)).date()  # hoy en Colombia
+    o = _order(db_session, seed_table, 20000)
+    o.tip_amount = 1800              # propina que dejó el cliente (10%)
+    db_session.commit()
+    _approved_payment(db_session, o, "nequi", 21800)  # cobrado = 20000 + 1800
+
+    body = client.get(f"/reports/sales?date={today.isoformat()}").json()
+    assert body["total"] == 21800       # total cobrado (incluye propina)
+    assert body["tips"] == 1800         # propina separada (para repartir)
+    assert body["net_sales"] == 20000   # ventas del negocio, sin propina
+
+
 def test_sales_report_ignores_other_days(client, db_session, seed_table):
     today = (datetime.utcnow() - timedelta(hours=5)).date()  # hoy en Colombia
     o1 = _order(db_session, seed_table, 10000)

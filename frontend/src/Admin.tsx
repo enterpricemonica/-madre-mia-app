@@ -20,7 +20,9 @@ const EMPTY_NEW = { name: '', description: '', price: 0, category: '', image_url
 // La forma del reporte de ventas (coincide con el backend)
 interface SalesReport {
   date: string
-  total: number
+  total: number        // total cobrado (ventas + propina)
+  tips: number         // propina (a repartir al equipo)
+  net_sales: number    // ventas del negocio, sin propina
   count: number
   by_method: Record<string, number>
 }
@@ -389,11 +391,21 @@ function Admin() {
 
           {report && (
             <>
-              <p className="report-total">
-                Total del día:{' '}
-                <strong>${report.total.toLocaleString('es-CO')}</strong>{' '}
-                <span className="report-count">({report.count} pedidos)</span>
-              </p>
+              <div className="report-summary">
+                <p className="report-line">
+                  Ventas netas:{' '}
+                  <strong>${report.net_sales.toLocaleString('es-CO')}</strong>
+                </p>
+                <p className="report-line report-tips">
+                  Propinas:{' '}
+                  <strong>${report.tips.toLocaleString('es-CO')}</strong>
+                </p>
+                <p className="report-total">
+                  Total cobrado:{' '}
+                  <strong>${report.total.toLocaleString('es-CO')}</strong>{' '}
+                  <span className="report-count">({report.count} pedidos)</span>
+                </p>
+              </div>
               <table className="report-table">
                 <thead>
                   <tr>

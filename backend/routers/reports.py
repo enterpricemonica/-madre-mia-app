@@ -45,13 +45,22 @@ def _sales_summary(db: Session, day):
     )
 
     by_method = {}
-    total = 0
+    total = 0   # total cobrado (incluye propina, = lo que realmente entró)
+    tips = 0    # de ese total, cuánto fue propina (para repartir al equipo, Ley 1935/2018)
     for p in payments:
         key = p.method or "otro"
         by_method[key] = by_method.get(key, 0) + p.amount
         total += p.amount
+        tips += (p.order.tip_amount or 0) if p.order else 0
 
-    return {"date": day.isoformat(), "total": total, "count": len(payments), "by_method": by_method}
+    return {
+        "date": day.isoformat(),
+        "total": total,                 # cobrado (ventas + propina)
+        "tips": tips,                   # propina (subconjunto del total)
+        "net_sales": total - tips,      # ventas del negocio, sin propina
+        "count": len(payments),
+        "by_method": by_method,
+    }
 
 
 # GET /reports/sales — resumen del día en JSON (protegido).
@@ -73,7 +82,9 @@ def sales_report_csv(date: str | None = None, db: Session = Depends(get_db), use
     for method, amount in summary["by_method"].items():
         writer.writerow([method, amount])
     writer.writerow([])
-    writer.writerow(["TOTAL", summary["total"]])
+    writer.writerow(["Ventas netas (sin propina)", summary["net_sales"]])
+    writer.writerow(["Propinas (a repartir)", summary["tips"]])
+    writer.writerow(["TOTAL COBRADO", summary["total"]])
     writer.writerow(["Pedidos", summary["count"]])
 
     return Response(
