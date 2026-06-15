@@ -1,7 +1,8 @@
 # Fase 2 · Wompi · 4. Ejecución (Wave 1)
 
 > Lo que se construyó para el pago online con Wompi (cliente paga desde su celular).
-> Estado: **código completo y probado (54 tests verdes); falta UAT en vivo**. (2026-06-12)
+> Estado: **✅ EN PRODUCCIÓN y UAT pasado en vivo** (camino aprobado + rechazado verificados de
+> punta a punta en celular). (UAT: 2026-06-15)
 
 ## Qué se construyó
 
@@ -61,24 +62,26 @@
   (su hash no corresponde a su propia cadena). El algoritmo paso-a-paso sí es correcto.
   Ver memoria `wompi-doc-checksum-bug`.
 
-## ✅ Checklist de despliegue
-- [ ] Cargar las 4 llaves de Wompi en las **variables de entorno de Railway**
-      (no van en git; hoy están solo en `backend/.env` local).
-- [ ] Confirmar `WOMPI_API_URL=https://sandbox.wompi.co/v1` en Railway (sandbox para UAT).
-- [ ] Desplegar backend y frontend.
-- [ ] En el panel de Wompi (sandbox) → configurar la **URL de eventos (webhook)** apuntando
-      a `https://<backend-railway>/payments/wompi/webhook`.
-- [ ] Verificar que el frontend (`VITE_API_URL`) apunte al backend de Railway.
+## ✅ Checklist de despliegue (COMPLETADO 2026-06-15)
+- [x] Cargar las **5 llaves** de Wompi en las variables de entorno de Railway
+      (`WOMPI_API_URL`, `PUBLIC_KEY`, `PRIVATE_KEY`, `INTEGRITY_SECRET`, `EVENTS_SECRET`). Todas `_test_`.
+- [x] Confirmar `WOMPI_API_URL=https://sandbox.wompi.co/v1` en Railway (sandbox para UAT).
+- [x] Desplegar backend (redeploy forzado para garantizar que el proceso leyó las 5 llaves) y frontend.
+- [x] En el panel de Wompi (sandbox, sección Programadores) → configurar la **URL de eventos (webhook)**:
+      `https://madre-mia-app-production.up.railway.app/payments/wompi/webhook`.
+      Verificados ambos secretos del panel (integridad + eventos) coinciden con Railway.
+- [x] Verificar que el frontend (`VITE_API_URL`) apunte al backend de Railway
+      (confirmado: el menú carga en `https://madre-mia-app.vercel.app`).
 
-## ✅ Checklist de UAT (prueba en vivo, en celular)
-- [ ] Escanear el QR de una mesa → abrir el menú en el celular.
-- [ ] Armar un pedido → "Enviar pedido" → "Pagar con Wompi".
-- [ ] El Widget de Wompi abre en el celular.
-- [ ] Pagar con los **datos de prueba del sandbox** (tarjeta/monto aprobado).
-- [ ] El webhook llega → el pago pasa a `approved` → la pantalla muestra "¡Pago confirmado!".
-- [ ] En cocina (`/cocina`): el pedido aparece con el sello "💵 pagado".
-- [ ] Probar también un pago **rechazado** (dato de prueba que declina) → pantalla de fallo.
-- [ ] Revisar que el **método real** (Nequi/PSE/tarjeta) quedó guardado en el pago.
+## ✅ Checklist de UAT (PASADO en vivo, celular — 2026-06-15)
+- [x] Abrir el menú en el celular (`https://madre-mia-app.vercel.app`) → carga OK.
+- [x] Armar un pedido → "Enviar pedido" → "Pagar con Wompi".
+- [x] El Widget de Wompi abre en el celular.
+- [x] Pagar con la tarjeta aprobada de sandbox `4242 4242 4242 4242` → aprobada.
+- [x] El webhook llega → el pago pasa a `approved` → la pantalla muestra "¡Pago confirmado!".
+- [x] En cocina (`/cocina`): el pedido aparece con el sello "💵 pagado".
+- [x] Pago **rechazado** con `4111 1111 1111 1111` → pantalla "Pago rechazado"; en cocina NO sale pagado.
+- [ ] (Opcional, futuro) Revisar que el **método real** (Nequi/PSE/tarjeta) quedó guardado en el pago.
 
 ## Pendientes / futuro
 - Validar la firma del webhook de **Bold** en sandbox/prod (TODO ya anotado en el código).
