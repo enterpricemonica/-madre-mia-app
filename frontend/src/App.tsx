@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import { useToast } from './Toast.tsx'
 import { Confetti } from './Confetti.tsx'
+import { setFavicon } from './favicon.ts'
 
 // La forma de un item del menú (coincide con el backend)
 interface MenuItem {
@@ -85,7 +86,10 @@ function App() {
     fetch(`${API_URL}/settings/theme`)
       .then((r) => r.json())
       .then((s) => {
-        if (s.logo_url) setLogoUrl(s.logo_url)
+        if (s.logo_url) {
+          setLogoUrl(s.logo_url)
+          setFavicon(s.logo_url) // el ícono de la pestaña sigue al logo del negocio
+        }
         if (s.tagline) setTagline(s.tagline)
         if (s.welcome) setWelcome(s.welcome)
         if (s.name) {

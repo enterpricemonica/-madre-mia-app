@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import './Kitchen.css'
 import { useToast } from './Toast.tsx'
+import { setFavicon } from './favicon.ts'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -75,7 +76,11 @@ function Kitchen() {
       .then((r) => r.json())
       .then((s) => {
         setBoldEnabled(!!s.bold_enabled)
-        if (s.name) setBizName(s.name)
+        if (s.logo_url) setFavicon(s.logo_url)
+        if (s.name) {
+          setBizName(s.name)
+          document.title = `Cocina — ${s.name}`
+        }
       })
       .catch(() => {})
   }, [])

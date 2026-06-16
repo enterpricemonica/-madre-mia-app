@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import './Admin.css'
 import { useToast } from './Toast.tsx'
+import { setFavicon } from './favicon.ts'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -140,6 +141,8 @@ function Admin() {
         .then((data) => {
           setTheme(data)
           setBoldEnabled(!!data.bold_enabled) // prendido/apagado del cobro Bold
+          if (data.logo_url) setFavicon(data.logo_url)
+          if (data.name) document.title = `Admin — ${data.name}`
         })
     }
   }, [token])
