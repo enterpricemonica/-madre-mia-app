@@ -13,9 +13,10 @@ interface MenuItem {
   available: boolean
   image_url: string | null
   featured: boolean
+  stock: number | null   // porciones restantes (null = ilimitado). M10 inventario
 }
 
-const EMPTY_NEW = { name: '', description: '', price: 0, category: '', image_url: '' }
+const EMPTY_NEW = { name: '', description: '', price: 0, category: '', image_url: '', stock: '' }
 
 // La forma del reporte de ventas (coincide con el backend)
 interface SalesReport {
@@ -229,6 +230,11 @@ function Admin() {
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, image_url } : it)))
   }
 
+  // Stock: vacío en pantalla = null (ilimitado); un número = porciones que quedan.
+  function changeStock(id: number, stock: number | null) {
+    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, stock } : it)))
+  }
+
   function saveItem(item: MenuItem) {
     fetch(`${API_URL}/menu/${item.id}`, {
       method: 'PUT',
@@ -261,7 +267,11 @@ function Admin() {
     fetch(`${API_URL}/menu/`, {
       method: 'POST',
       headers: authHeaders,
-      body: JSON.stringify({ ...newItem, available: true }),
+      body: JSON.stringify({
+        ...newItem,
+        available: true,
+        stock: newItem.stock === '' ? null : Number(newItem.stock), // vacío = ilimitado
+      }),
     }).then(() => {
       setNewItem(EMPTY_NEW)
       loadItems()
@@ -491,6 +501,13 @@ function Admin() {
           value={newItem.image_url}
           onChange={(e) => setNewItem({ ...newItem, image_url: e.target.value })}
         />
+        <input
+          type="number"
+          min={0}
+          placeholder="Stock (vacío = ilimitado)"
+          value={newItem.stock}
+          onChange={(e) => setNewItem({ ...newItem, stock: e.target.value })}
+        />
         <button onClick={addItem}>Agregar</button>
       </div>
 
@@ -501,6 +518,7 @@ function Admin() {
             <th>Plato</th>
             <th>Categoría</th>
             <th>Precio</th>
+            <th>Stock</th>
             <th>Foto</th>
             <th>Estado</th>
             <th>⭐</th>
@@ -517,6 +535,19 @@ function Admin() {
                   type="number"
                   value={item.price}
                   onChange={(e) => changePrice(item.id, Number(e.target.value))}
+                />
+                <button onClick={() => saveItem(item)}>Guardar</button>
+              </td>
+              <td className="stock-cell">
+                <input
+                  type="number"
+                  min={0}
+                  className="stock-input"
+                  value={item.stock ?? ''}
+                  placeholder="∞"
+                  onChange={(e) =>
+                    changeStock(item.id, e.target.value === '' ? null : Number(e.target.value))
+                  }
                 />
                 <button onClick={() => saveItem(item)}>Guardar</button>
               </td>

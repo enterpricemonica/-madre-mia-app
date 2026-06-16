@@ -15,7 +15,7 @@
 | **M7** | Lealtad / puntos | 💡 Idea futura | Programa de puntos/recompensas. Valioso, pero es su propio proyecto. |
 | **M8** | Plantilla reusable / white-label | ✅ **Hecho** | Nombre, eslogan, saludo, logo y colores editables desde el admin (🎨); el título de la pestaña es dinámico. Falta solo (opcional) el favicon/ícono, que se cambia como archivo por despliegue. **Enabler para vender a más restaurantes.** |
 | **M9** | Menú multi-idioma | ⬜ Pendiente | El cliente ve el menú en varios idiomas (es/en). Útil en zonas turísticas. |
-| **M10** | Control de inventario | ⬜ Pendiente | Stock por plato, descuento al vender, aviso de "agotado". |
+| **M10** | Control de inventario | ✅ **Hecho** | Stock opcional por plato (vacío = ilimitado), editable en el admin; se descuenta al vender (validado en servidor); el cliente ve "Agotado"/"Quedan X" y no puede pedir de más. |
 
 ## Notas de decisión
 - **Vitrina/storefront personalizable** (Inicio/Nosotros/Ordena aquí, editable desde admin) → pertenece a **M4**. No urge para Rachel (dine-in: el cliente escanea el QR y va directo al menú). Idea revisada y aplazada conscientemente el 2026-06-15.

@@ -26,6 +26,7 @@ class MenuItem(Base):
     available   = Column(Boolean, default=True)
     image_url   = Column(String, nullable=True)  # ruta/URL de la foto (opcional)
     featured    = Column(Boolean, default=False)  # plato estrella (⭐ Favorito)
+    stock       = Column(Integer, nullable=True)  # porciones que quedan (NULL = ilimitado). M10 inventario
 
 
 class Order(Base):

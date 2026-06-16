@@ -61,6 +61,46 @@ def test_unavailable_item_is_rejected(client, seed_menu, seed_table):
     assert r.status_code == 400
 
 
+# ── Inventario (M10) ──
+def test_order_decrements_stock(client, seed_menu, seed_table, db_session):
+    arepa = seed_menu["arepa"]
+    arepa.stock = 5
+    db_session.commit()
+
+    r = client.post("/orders/", json={
+        "table_id": seed_table.id,
+        "items": [{"item_id": arepa.id, "quantity": 2}],
+    })
+    assert r.status_code == 200
+    db_session.refresh(arepa)
+    assert arepa.stock == 3   # 5 - 2 vendidas
+
+
+def test_order_rejected_when_not_enough_stock(client, seed_menu, seed_table, db_session):
+    arepa = seed_menu["arepa"]
+    arepa.stock = 1
+    db_session.commit()
+
+    r = client.post("/orders/", json={
+        "table_id": seed_table.id,
+        "items": [{"item_id": arepa.id, "quantity": 2}],  # pide 2, solo hay 1
+    })
+    assert r.status_code == 400
+    db_session.refresh(arepa)
+    assert arepa.stock == 1   # no se tocó (la venta se rechazó entera)
+
+
+def test_unlimited_stock_is_not_decremented(client, seed_menu, seed_table, db_session):
+    arepa = seed_menu["arepa"]  # stock None = ilimitado
+    r = client.post("/orders/", json={
+        "table_id": seed_table.id,
+        "items": [{"item_id": arepa.id, "quantity": 3}],
+    })
+    assert r.status_code == 200
+    db_session.refresh(arepa)
+    assert arepa.stock is None   # sigue ilimitado
+
+
 def test_order_needs_existing_table(client, seed_menu):
     arepa = seed_menu["arepa"]
     r = client.post("/orders/", json={

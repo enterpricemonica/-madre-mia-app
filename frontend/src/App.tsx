@@ -13,6 +13,7 @@ interface MenuItem {
   available: boolean
   image_url: string | null
   featured: boolean
+  stock: number | null   // porciones restantes (null = ilimitado). M10 inventario
 }
 
 function getTableNumberFromUrl() {
@@ -105,6 +106,13 @@ function App() {
 
   // Agregar 1 unidad de un item al carrito
   function addToCart(itemId: number) {
+    const item = menu.find((m) => m.id === itemId)
+    const current = cart[itemId] || 0
+    // Inventario (M10): si el plato tiene stock limitado, no dejar pasar de lo disponible.
+    if (item && item.stock !== null && current >= item.stock) {
+      toast(item.stock <= 0 ? 'Agotado' : `Solo quedan ${item.stock}`, 'error')
+      return
+    }
     setCart((prev) => ({
       ...prev, // copiamos todo lo que ya estaba en el carrito
       [itemId]: (prev[itemId] || 0) + 1, // y le sumamos 1 a este item
@@ -279,8 +287,12 @@ function App() {
             <h2 className="category-title">{category}</h2>
             {menu
               .filter((item) => item.category === category)
-              .map((item) => (
-                <article key={item.id} className="card">
+              .map((item) => {
+                const soldOut = item.stock !== null && item.stock <= 0
+                const reachedMax =
+                  item.stock !== null && (cart[item.id] || 0) >= item.stock
+                return (
+                <article key={item.id} className={`card ${soldOut ? 'sold-out' : ''}`}>
                   {item.image_url && (
                     <img
                       src={item.image_url}
@@ -289,8 +301,12 @@ function App() {
                     />
                   )}
                   <div className="card-info">
-                    {item.featured && (
+                    {item.featured && !soldOut && (
                       <span className="fav-badge">⭐ Favorito</span>
+                    )}
+                    {soldOut && <span className="soldout-badge">Agotado</span>}
+                    {!soldOut && item.stock !== null && (
+                      <span className="stock-left">Quedan {item.stock}</span>
                     )}
                     <h3 className="card-name">{item.name}</h3>
                     {item.description && (
@@ -303,11 +319,13 @@ function App() {
                   <button
                     className="add-btn"
                     onClick={() => addToCart(item.id)}
+                    disabled={soldOut || reachedMax}
                   >
-                    {cart[item.id] ? `${cart[item.id]}  +` : '+'}
+                    {soldOut ? 'Agotado' : cart[item.id] ? `${cart[item.id]}  +` : '+'}
                   </button>
                 </article>
-              ))}
+                )
+              })}
           </section>
         ))}
       </main>

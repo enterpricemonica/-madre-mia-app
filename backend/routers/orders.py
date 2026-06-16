@@ -40,6 +40,13 @@ def create_order(order: schemas.OrderCreate, db: Session = Depends(get_db)):
             raise HTTPException(
                 status_code=400, detail=f"Menu item {line.item_id} not available"
             )
+        # Inventario (M10): si el plato tiene stock limitado (no NULL), validar que alcance.
+        # NULL = ilimitado → no se revisa ni se descuenta.
+        if menu_item.stock is not None and menu_item.stock < line.quantity:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Not enough stock for item {line.item_id} (left: {menu_item.stock})",
+            )
         total += menu_item.price * line.quantity
 
         order_item = models.OrderItem(
@@ -49,6 +56,10 @@ def create_order(order: schemas.OrderCreate, db: Session = Depends(get_db)):
             notes=line.notes,
         )
         db.add(order_item)
+
+        # Descontar del inventario (solo si es limitado).
+        if menu_item.stock is not None:
+            menu_item.stock -= line.quantity
 
     # PASO 4: Guardar el total en el pedido.
     new_order.total = total

@@ -125,6 +125,38 @@
   border-radius: 999px;
   margin-bottom: 5px;
 }
+/* Inventario (M10): badge de "Agotado" y "Quedan X" */
+.soldout-badge {
+  display: inline-block;
+  background: #dc2626;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-bottom: 5px;
+}
+.stock-left {
+  display: inline-block;
+  background: var(--warning, #e0b13f);
+  color: var(--dark);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-bottom: 5px;
+}
+/* Tarjeta de un plato agotado: apagada */
+.card.sold-out {
+  opacity: 0.55;
+}
+/* Botón "+" deshabilitado (agotado o llegó al máximo) */
+.add-btn:disabled {
+  background: var(--border);
+  color: var(--muted);
+  cursor: not-allowed;
+  font-size: 12px;
+}
 .card-name {
   margin: 0;
   font-size: 17px;

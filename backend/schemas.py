@@ -11,6 +11,7 @@ class MenuItemBase(BaseModel):
     available: bool = True
     image_url: Optional[str] = None
     featured: bool = False
+    stock: Optional[int] = None   # porciones restantes (None = ilimitado). M10 inventario
 
 class MenuItemCreate(MenuItemBase):
     pass

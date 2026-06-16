@@ -263,6 +263,13 @@
   border-radius: 6px;
   margin-right: 6px;
 }
+.stock-input {
+  width: 64px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-right: 6px;
+}
 .img-input {
   width: 120px;
   padding: 6px;
