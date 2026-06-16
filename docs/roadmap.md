@@ -6,15 +6,15 @@
 
 | # | Milestone | Estado | Resumen |
 |---|-----------|--------|---------|
-| **M1** | Pagos integrados (Bold) | ⏸️ Pausado | Rachel va **manual** (marca cómo pagó). El pago integrado (Bold/QR/webhook) quedó en la rama `wave-2-pago` para negocios que lo quieran. |
-| **M2** | Reportes / cuadre de caja | ✅ **Hecho (prod)** | Pago manual (5 métodos) + reporte por día y método + descarga CSV (en hora Colombia). |
-| **M3** | Facturación DIAN / impuestos | ⬜ Pendiente | IVA, impoconsumo, factura electrónica. Investigar proveedor. |
-| **M4** | Multi-restaurante | ⬜ Pendiente | Que varios negocios lo usen: cada uno con su menú, tema **y página/storefront personalizable** (header + imágenes desde el admin). |
+| **M1** | Pagos integrados | ✅ **Hecho (prod)** | **Wompi online** (cliente paga desde el celular) + **propina voluntaria** (Ley 1935/2018, máx 10%), con UAT en vivo. Pago manual sigue disponible. Bold quedó opcional en la rama `wave-2-pago`. |
+| **M2** | Reportes / cuadre de caja | ✅ **Hecho (prod)** | Pago manual (5 métodos) + reporte por día y método + CSV (hora Colombia) + **propina separada** (ventas netas / propinas / total). |
+| **M3** | Facturación DIAN / impuestos | ⬜ Pendiente | IVA, impoconsumo, factura electrónica. Investigar proveedor. (Legalmente importante para operar formal.) |
+| **M4** | Multi-restaurante + vitrina | ⬜ Pendiente | Que varios negocios lo usen: cada uno con su menú, tema **y vitrina/storefront** (Inicio/Nosotros/Ordena aquí, editable desde admin). |
 | **M5** | Offline / PWA | ⬜ Pendiente | App instalable, resiliencia a mala conexión, **notificaciones push**. |
-| **M6** | UI moderna | 🚧 **En progreso** | Toasts, animación de carrito, skeletons, transiciones. Mantener la marca cálida, modernizar la ejecución. |
+| **M6** | UI moderna | ✅ **Hecho (prod)** | Toasts, animación de carrito, skeletons, y confeti + pop en "¡Pago confirmado!". Marca cálida, ejecución moderna. |
 | **M7** | Lealtad / puntos | 💡 Idea futura | Programa de puntos/recompensas. Valioso, pero es su propio proyecto. |
 
 ## Notas de decisión
-- **Página web personalizable por negocio** (header + imágenes desde admin) → pertenece a **M4** (es branding por-tenant). No urge para Rachel (dine-in: el cliente escanea el QR y va directo al menú).
-- **Pagos:** Rachel no quiere dar credenciales de Bold → modo manual. El pago integrado es **opcional** para otros negocios (rama `wave-2-pago`).
-- Prioridad actual: **M6**, arrancando por **toasts → animación de carrito → skeletons**.
+- **Vitrina/storefront personalizable** (Inicio/Nosotros/Ordena aquí, editable desde admin) → pertenece a **M4**. No urge para Rachel (dine-in: el cliente escanea el QR y va directo al menú). Idea revisada y aplazada conscientemente el 2026-06-15.
+- **Pagos:** Wompi online en prod. Bold (datáfono) quedó **opcional** para otros negocios (rama `wave-2-pago`); Rachel no quiso dar credenciales de Bold.
+- **Próximo a decidir:** M3 (facturación DIAN, legalmente importante) vs M5 (offline/PWA) vs M4 (multi-restaurante). Sin decisión tomada aún.
