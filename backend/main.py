@@ -21,6 +21,9 @@ def ensure_columns():
         conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS tip_amount INTEGER DEFAULT 0"))
         conn.execute(text("ALTER TABLE theme ADD COLUMN IF NOT EXISTS logo_url VARCHAR DEFAULT '/logo.jpeg'"))
         conn.execute(text("ALTER TABLE theme ADD COLUMN IF NOT EXISTS bold_enabled BOOLEAN DEFAULT false"))
+        conn.execute(text("ALTER TABLE theme ADD COLUMN IF NOT EXISTS name VARCHAR DEFAULT 'Madre Mía'"))
+        conn.execute(text("ALTER TABLE theme ADD COLUMN IF NOT EXISTS tagline VARCHAR DEFAULT 'Arepas con Café de Origen'"))
+        conn.execute(text("ALTER TABLE theme ADD COLUMN IF NOT EXISTS welcome VARCHAR DEFAULT 'Bienvenido 🫓'"))
         conn.commit()
 
 

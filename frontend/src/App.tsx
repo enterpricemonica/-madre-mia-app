@@ -33,6 +33,10 @@ function App() {
   const [menu, setMenu] = useState<MenuItem[]>([])
   const [loading, setLoading] = useState(true) // true mientras carga el menú
   const [logoUrl, setLogoUrl] = useState('/logo.jpeg') // logo configurable desde el admin
+  // Marca del negocio (configurable desde el admin → app reusable). Vacío hasta que carga.
+  const [bizName, setBizName] = useState('')
+  const [tagline, setTagline] = useState('')
+  const [welcome, setWelcome] = useState('')
 
   // El carrito: un objeto que relaciona el id del item -> cantidad.
   // Ejemplo: { 2: 3, 4: 1 } = 3 arepas (id 2) y 1 bandeja (id 4).
@@ -75,12 +79,18 @@ function App() {
       .finally(() => setLoading(false)) // pase lo que pase, dejamos de "cargar"
   }, [])
 
-  // Traer el logo configurado desde el admin (settings/theme)
+  // Traer la marca configurada desde el admin (settings/theme): logo, nombre, eslogan, saludo
   useEffect(() => {
     fetch(`${API_URL}/settings/theme`)
       .then((r) => r.json())
       .then((s) => {
         if (s.logo_url) setLogoUrl(s.logo_url)
+        if (s.tagline) setTagline(s.tagline)
+        if (s.welcome) setWelcome(s.welcome)
+        if (s.name) {
+          setBizName(s.name)
+          document.title = `${s.name} 🫓` // título de la pestaña, dinámico
+        }
       })
       .catch(() => {})
   }, [])
@@ -229,8 +239,8 @@ function App() {
   return (
     <div className="app">
       <header className="header">
-        <img src={logoUrl} alt="Madre Mía — Arepas con Café de Origen" className="header-logo" />
-        <p className="welcome">Bienvenido 🫓</p>
+        <img src={logoUrl} alt={tagline ? `${bizName} — ${tagline}` : bizName} className="header-logo" />
+        <p className="welcome">{welcome}</p>
         <p className="table-pill">Mesa {tableNumber}</p>
       </header>
 

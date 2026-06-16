@@ -13,8 +13,12 @@
 | **M5** | Offline / PWA | ⬜ Pendiente | App instalable, resiliencia a mala conexión, **notificaciones push**. |
 | **M6** | UI moderna | ✅ **Hecho (prod)** | Toasts, animación de carrito, skeletons, y confeti + pop en "¡Pago confirmado!". Marca cálida, ejecución moderna. |
 | **M7** | Lealtad / puntos | 💡 Idea futura | Programa de puntos/recompensas. Valioso, pero es su propio proyecto. |
+| **M8** | Plantilla reusable / white-label | ✅ **Hecho** | Nombre, eslogan, saludo, logo y colores editables desde el admin (🎨); el título de la pestaña es dinámico. Falta solo (opcional) el favicon/ícono, que se cambia como archivo por despliegue. **Enabler para vender a más restaurantes.** |
+| **M9** | Menú multi-idioma | ⬜ Pendiente | El cliente ve el menú en varios idiomas (es/en). Útil en zonas turísticas. |
+| **M10** | Control de inventario | ⬜ Pendiente | Stock por plato, descuento al vender, aviso de "agotado". |
 
 ## Notas de decisión
 - **Vitrina/storefront personalizable** (Inicio/Nosotros/Ordena aquí, editable desde admin) → pertenece a **M4**. No urge para Rachel (dine-in: el cliente escanea el QR y va directo al menú). Idea revisada y aplazada conscientemente el 2026-06-15.
 - **Pagos:** Wompi online en prod. Bold (datáfono) quedó **opcional** para otros negocios (rama `wave-2-pago`); Rachel no quiso dar credenciales de Bold.
-- **Próximo a decidir:** M3 (facturación DIAN, legalmente importante) vs M5 (offline/PWA) vs M4 (multi-restaurante). Sin decisión tomada aún.
+- **Dirección de producto (2026-06-15):** Monica quiere **vender la app a más restaurantes**. Tras research de mercado, priorizó: **M8 (plantilla reusable)**, **M9 (multi-idioma)** y **M10 (inventario)**. M5 (offline) descartado para Rachel (buen internet). El "multi-tenant" pesado (muchos restaurantes en un deploy) NO es lo que quiere: prefiere 1 deploy por restaurante, fácil de re-vestir (white-label).
+- **Próximo a decidir:** cuál de M8/M9/M10 construir primero.

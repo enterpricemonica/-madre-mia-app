@@ -106,3 +106,7 @@ class Theme(Base):
     dark      = Column(String, default="#2e2a26")
     logo_url  = Column(String, default="/logo.jpeg")  # ruta/URL del logo (editable desde admin)
     bold_enabled = Column(Boolean, default=False)     # ¿este negocio cobra con Bold (datáfono)?
+    # ── Marca del negocio (editable desde el admin → app reusable / white-label) ──
+    name      = Column(String, default="Madre Mía")                    # nombre del restaurante
+    tagline   = Column(String, default="Arepas con Café de Origen")    # eslogan bajo el logo
+    welcome   = Column(String, default="Bienvenido 🫓")                # saludo en la pantalla del cliente

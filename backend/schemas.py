@@ -156,6 +156,9 @@ class ThemeOut(BaseModel):
     dark: str
     logo_url: str = "/logo.jpeg"
     bold_enabled: bool = False
+    name: str = "Madre Mía"                            # nombre del negocio (white-label)
+    tagline: str = "Arepas con Café de Origen"         # eslogan
+    welcome: str = "Bienvenido 🫓"                     # saludo al cliente
     class Config:
         from_attributes = True
 

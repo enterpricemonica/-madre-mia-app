@@ -44,6 +44,7 @@ function Kitchen() {
   const toast = useToast()
   const [orders, setOrders] = useState<Order[]>([])
   const [boldEnabled, setBoldEnabled] = useState(false) // ¿el negocio cobra con Bold?
+  const [bizName, setBizName] = useState('') // nombre del negocio (white-label)
   const [charging, setCharging] = useState<Set<number>>(new Set()) // pedidos cobrándose ahora
 
   // Pide los pedidos al backend
@@ -72,7 +73,10 @@ function Kitchen() {
   useEffect(() => {
     fetch(`${API_URL}/settings/theme`)
       .then((r) => r.json())
-      .then((s) => setBoldEnabled(!!s.bold_enabled))
+      .then((s) => {
+        setBoldEnabled(!!s.bold_enabled)
+        if (s.name) setBizName(s.name)
+      })
       .catch(() => {})
   }, [])
 
@@ -135,7 +139,7 @@ function Kitchen() {
 
   return (
     <div className="kitchen">
-      <h1>🍳 Cocina — Madre Mía</h1>
+      <h1>🍳 Cocina{bizName ? ` — ${bizName}` : ''}</h1>
 
       {activeOrders.length === 0 && (
         <p className="empty">No hay pedidos pendientes</p>

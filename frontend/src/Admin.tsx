@@ -73,7 +73,7 @@ function Login({ onLogin }: { onLogin: (token: string) => void }) {
 
   return (
     <div className="login">
-      <h1>🔑 Admin — Madre Mía</h1>
+      <h1>🔑 Admin</h1>
       <input
         placeholder="Usuario"
         value={username}
@@ -283,7 +283,7 @@ function Admin() {
   return (
     <div className="admin">
       <div className="admin-top">
-        <h1>🧑‍🍳 Admin — Madre Mía</h1>
+        <h1>🧑‍🍳 Admin{theme?.name ? ` — ${theme.name}` : ''}</h1>
         <div className="admin-actions">
           <button
             className="icon-btn"
@@ -318,7 +318,37 @@ function Admin() {
       {/* ── Tema (colores) — se muestra solo al tocar el icono 🎨 ── */}
       {showTheme && theme && (
         <div className="theme-form">
-          <h2>🎨 Tema y logo</h2>
+          <h2>🎨 Marca, colores y logo</h2>
+
+          {/* Marca del negocio — editable (app reusable / white-label) */}
+          <label className="logo-field">
+            <span>Nombre del negocio</span>
+            <input
+              type="text"
+              value={theme.name || ''}
+              onChange={(e) => setTheme((prev) => (prev ? { ...prev, name: e.target.value } : prev))}
+              placeholder="Ej: Madre Mía"
+            />
+          </label>
+          <label className="logo-field">
+            <span>Eslogan</span>
+            <input
+              type="text"
+              value={theme.tagline || ''}
+              onChange={(e) => setTheme((prev) => (prev ? { ...prev, tagline: e.target.value } : prev))}
+              placeholder="Ej: Arepas con Café de Origen"
+            />
+          </label>
+          <label className="logo-field">
+            <span>Saludo de bienvenida</span>
+            <input
+              type="text"
+              value={theme.welcome || ''}
+              onChange={(e) => setTheme((prev) => (prev ? { ...prev, welcome: e.target.value } : prev))}
+              placeholder="Ej: Bienvenido 🫓"
+            />
+          </label>
+
           <div className="theme-grid">
             {THEME_FIELDS.map((f) => (
               <label key={f.key} className="theme-field">
