@@ -13,7 +13,7 @@
 | **M5** | Offline / PWA | ⬜ Pendiente | App instalable, resiliencia a mala conexión, **notificaciones push**. |
 | **M6** | UI moderna | ✅ **Hecho (prod)** | Toasts, animación de carrito, skeletons, y confeti + pop en "¡Pago confirmado!". Marca cálida, ejecución moderna. |
 | **M7** | Lealtad / puntos | 💡 Idea futura | Programa de puntos/recompensas. Valioso, pero es su propio proyecto. |
-| **M8** | Plantilla reusable / white-label | ✅ **Hecho** | Nombre, eslogan, saludo, logo y colores editables desde el admin (🎨); el título de la pestaña es dinámico. Falta solo (opcional) el favicon/ícono, que se cambia como archivo por despliegue. **Enabler para vender a más restaurantes.** |
+| **M8** | Plantilla reusable / white-label | ✅ **Hecho (completo)** | Nombre, eslogan, saludo, logo y colores editables desde el admin (🎨); título de pestaña y **favicon** siguen al negocio (derivados del logo/nombre). Montar un restaurante nuevo = cambiar config, sin recodificar. **Enabler para vender a más restaurantes.** |
 | **M9** | Menú multi-idioma | ⬜ Pendiente | El cliente ve el menú en varios idiomas (es/en). Útil en zonas turísticas. |
 | **M10** | Control de inventario | ✅ **Hecho** | Stock opcional por plato (vacío = ilimitado), editable en el admin; se descuenta al vender (validado en servidor); el cliente ve "Agotado"/"Quedan X" y no puede pedir de más. |
 
