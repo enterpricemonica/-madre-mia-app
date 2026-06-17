@@ -159,7 +159,12 @@ function App() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        // OJO: revisar el estado ANTES de tratarlo como éxito. Si un plato se agotó
+        // (u otro error 400/500), el cuerpo NO es un pedido → no vaciar el carrito.
+        if (!response.ok) throw new Error('order failed')
+        return response.json()
+      })
       .then((newOrder) => {
         toast('¡Pedido enviado! #' + newOrder.id)
         setOrder({ id: newOrder.id, total }) // guardamos el total antes de vaciar
@@ -167,7 +172,7 @@ function App() {
       })
       .catch((error) => {
         console.error('Error al enviar el pedido:', error)
-        toast('No se pudo enviar el pedido', 'error')
+        toast('No se pudo enviar el pedido. Quizá un plato se agotó — recarga el menú.', 'error')
       })
   }
 
