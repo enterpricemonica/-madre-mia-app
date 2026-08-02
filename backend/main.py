@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
 import models
-from routers import menu, tables, orders, auth, settings, payments, reports
+from routers import menu, tables, orders, auth, settings, payments, reports, health
 
 # Automatically create all tables in PostgreSQL
 Base.metadata.create_all(bind=engine)
@@ -70,7 +70,9 @@ app.include_router(auth.router)
 app.include_router(settings.router)
 app.include_router(payments.router)
 app.include_router(reports.router)
+app.include_router(health.router)
 
 @app.get("/")
 def root():
     return {"message": "Welcome to Madre Mia API 🫓"}
+

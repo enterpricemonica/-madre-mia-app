@@ -1,0 +1,58 @@
+# Nightly database backup.
+#
+# Why this exists: when the Railway service was deleted there was no backup of
+# any kind — no dump, no export, nothing in the docs. Rachel's order history,
+# her menu edits, her branding and her stock levels existed in exactly one
+# place, and that place could be removed by a lapsed trial.
+#
+# PRIVACY: this repository is PUBLIC, and workflow artifacts on a public repo
+# can be downloaded by anyone. A raw dump contains real customer orders, so the
+# dump is encrypted with a passphrase before it ever leaves the runner. Without
+# BACKUP_PASSPHRASE set, this job refuses to run rather than publishing data.
+name: Backup database
+
+on:
+  schedule:
+    - cron: "0 8 * * *"     # 03:00 in Colombia (UTC-5), after the restaurant closes
+  workflow_dispatch:
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refuse to run without encryption
+        run: |
+          if [ -z "${{ secrets.BACKUP_PASSPHRASE }}" ]; then
+            echo "::error::BACKUP_PASSPHRASE is not set."
+            echo "This repo is public; an unencrypted dump would expose customer orders."
+            exit 1
+          fi
+
+      - name: Install postgresql-client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+
+      - name: Dump and encrypt
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::DATABASE_URL secret is not set."
+            exit 1
+          fi
+          stamp=$(date -u +%Y-%m-%d)
+          pg_dump --no-owner --no-privileges "$DATABASE_URL" > dump.sql
+          echo "Dump size: $(du -h dump.sql | cut -f1)"
+          # Symmetric encryption; the passphrase never touches the repository.
+          gpg --batch --yes --symmetric --cipher-algo AES256 \
+              --passphrase "$PASSPHRASE" \
+              --output "madre-mia-$stamp.sql.gpg" dump.sql
+          rm -f dump.sql
+          echo "stamp=$stamp" >> "$GITHUB_ENV"
+
+      - name: Keep it
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ env.stamp }}
+          path: "*.sql.gpg"
+          retention-days: 30

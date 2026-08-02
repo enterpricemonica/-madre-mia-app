@@ -4,6 +4,8 @@ Cubre: pago manual (efectivo/datafono), reporte agrupado por método,
 que solo cuente el día pedido y solo pagos approved, descarga CSV, y que esté protegido.
 """
 from datetime import datetime, date, timedelta
+
+from timeutils import colombia_today, utc_now
 import models
 
 
@@ -56,7 +58,7 @@ def test_manual_payment_no_double_pay(client, db_session, seed_table):
 
 # ── Reporte ──
 def test_sales_report_groups_by_method(client, db_session, seed_table):
-    today = (datetime.utcnow() - timedelta(hours=5)).date()  # hoy en Colombia
+    today = colombia_today()
     o1 = _order(db_session, seed_table, 10000)
     o2 = _order(db_session, seed_table, 5000)
     o3 = _order(db_session, seed_table, 8000)
@@ -74,7 +76,7 @@ def test_sales_report_groups_by_method(client, db_session, seed_table):
 
 
 def test_sales_report_separates_tips_from_net_sales(client, db_session, seed_table):
-    today = (datetime.utcnow() - timedelta(hours=5)).date()  # hoy en Colombia
+    today = colombia_today()
     o = _order(db_session, seed_table, 20000)
     o.tip_amount = 1800              # propina que dejó el cliente (10%)
     db_session.commit()
@@ -87,18 +89,18 @@ def test_sales_report_separates_tips_from_net_sales(client, db_session, seed_tab
 
 
 def test_sales_report_ignores_other_days(client, db_session, seed_table):
-    today = (datetime.utcnow() - timedelta(hours=5)).date()  # hoy en Colombia
+    today = colombia_today()
     o1 = _order(db_session, seed_table, 10000)
     o2 = _order(db_session, seed_table, 7000)
     _approved_payment(db_session, o1, "efectivo", 10000)
-    _approved_payment(db_session, o2, "efectivo", 7000, when=datetime.utcnow() - timedelta(days=1))
+    _approved_payment(db_session, o2, "efectivo", 7000, when=utc_now() - timedelta(days=1))
 
     r = client.get(f"/reports/sales?date={today.isoformat()}")
     assert r.json()["total"] == 10000  # solo el de hoy
 
 
 def test_sales_report_ignores_pending(client, db_session, seed_table):
-    today = (datetime.utcnow() - timedelta(hours=5)).date()  # hoy en Colombia
+    today = colombia_today()
     o1 = _order(db_session, seed_table, 10000)
     _approved_payment(db_session, o1, "efectivo", 10000)
     o2 = _order(db_session, seed_table, 9999)
@@ -110,7 +112,7 @@ def test_sales_report_ignores_pending(client, db_session, seed_table):
 
 
 def test_sales_csv_download(client, db_session, seed_table):
-    today = (datetime.utcnow() - timedelta(hours=5)).date()  # hoy en Colombia
+    today = colombia_today()
     o1 = _order(db_session, seed_table, 10000)
     _approved_payment(db_session, o1, "efectivo", 10000)
     r = client.get(f"/reports/sales.csv?date={today.isoformat()}")

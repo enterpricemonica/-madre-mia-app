@@ -1,0 +1,54 @@
+# Uptime monitor.
+#
+# Why this exists: on 2026-06-16 the Railway trial expired, the backend was
+# deleted, and the app stayed broken for seven weeks. Nobody found out, because
+# nothing was watching. A customer scanning a QR at the restaurant saw a page
+# that never loaded its menu.
+#
+# GitHub emails the repository owner whenever a scheduled workflow fails, so a
+# failing check here IS the alert — no third-party service, no cost.
+name: Uptime
+
+on:
+  schedule:
+    # Every 15 minutes. GitHub's scheduler is best-effort and can run late
+    # under load; that is fine for an outage alert.
+    - cron: "*/15 * * * *"
+  workflow_dispatch:        # so it can be run by hand from the Actions tab
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Backend health
+        run: |
+          URL="${{ vars.BACKEND_URL }}"
+          if [ -z "$URL" ]; then
+            echo "::error::Repository variable BACKEND_URL is not set."
+            echo "Set it under Settings > Secrets and variables > Actions > Variables."
+            exit 1
+          fi
+
+          echo "Checking $URL/health"
+          # --max-time guards against a hung server; retries absorb a cold start.
+          code=$(curl -sS -o /tmp/body.txt -w '%{http_code}' \
+                   --max-time 25 --retry 2 --retry-delay 10 "$URL/health" || echo 000)
+
+          echo "HTTP $code"
+          echo "Response: $(head -c 300 /tmp/body.txt)"
+
+          if [ "$code" != "200" ]; then
+            echo "::error::Backend is DOWN — /health returned $code."
+            echo "The customer-facing menu will not load. Check Railway."
+            exit 1
+          fi
+          echo "Backend is up."
+
+      - name: Frontend reachable
+        run: |
+          URL="${{ vars.FRONTEND_URL }}"
+          [ -z "$URL" ] && { echo "FRONTEND_URL not set, skipping."; exit 0; }
+          code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 25 "$URL" || echo 000)
+          echo "HTTP $code"
+          [ "$code" = "200" ] || { echo "::error::Frontend returned $code."; exit 1; }
+          echo "Frontend is up."

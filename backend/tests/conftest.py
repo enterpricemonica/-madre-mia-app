@@ -25,6 +25,7 @@ from routers import orders as orders_router  # noqa: E402
 from routers import menu as menu_router  # noqa: E402
 from routers import payments as payments_router  # noqa: E402
 from routers import reports as reports_router  # noqa: E402
+from routers import health as health_router  # noqa: E402
 from auth import get_current_user  # noqa: E402
 
 
@@ -54,6 +55,7 @@ def _build_app(db_session, auth=True):
     app.include_router(orders_router.router)
     app.include_router(payments_router.router)
     app.include_router(reports_router.router)
+    app.include_router(health_router.router)
 
     def override_get_db():
         yield db_session

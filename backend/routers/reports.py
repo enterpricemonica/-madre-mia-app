@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from auth import get_current_user
+from timeutils import colombia_today
 import models
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
@@ -26,7 +27,7 @@ def _parse_date(date_str):
     """El día pedido (YYYY-MM-DD); si no viene, HOY en hora de Colombia."""
     if date_str:
         return date_cls.fromisoformat(date_str)
-    return (datetime.utcnow() - COLOMBIA_OFFSET).date()
+    return colombia_today()
 
 
 def _sales_summary(db: Session, day):

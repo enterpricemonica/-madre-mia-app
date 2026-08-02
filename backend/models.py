@@ -1,3 +1,4 @@
+from timeutils import utc_now
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -38,7 +39,7 @@ class Order(Base):
     order_type = Column(String, default="dine_in")  # dine_in (comer aquí) / takeaway (para llevar)
     total      = Column(Integer, default=0)           # valor del pedido (SIN propina)
     tip_amount = Column(Integer, default=0)           # propina VOLUNTARIA del cliente (Ley 1935/2018, máx 10%)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
     table      = relationship("Table", back_populates="orders")
     items      = relationship("OrderItem", back_populates="order")
@@ -79,8 +80,8 @@ class Payment(Base):
     method       = Column(String, nullable=True)       # bre_b / nequi / card (lo elige el cliente)
     amount       = Column(Integer, nullable=False)     # monto cobrado en COP (enteros, sin decimales)
     status       = Column(String, default="pending")   # pending → approved / declined
-    created_at   = Column(DateTime, default=datetime.utcnow)
-    updated_at   = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at   = Column(DateTime, default=utc_now)
+    updated_at   = Column(DateTime, default=utc_now, onupdate=utc_now)
 
     order        = relationship("Order", back_populates="payments")
 
