@@ -24,9 +24,12 @@ jobs:
         run: |
           URL="${{ vars.BACKEND_URL }}"
           if [ -z "$URL" ]; then
-            echo "::error::Repository variable BACKEND_URL is not set."
-            echo "Set it under Settings > Secrets and variables > Actions > Variables."
-            exit 1
+            # Not configured yet — stay quiet. A monitor that emails every 15
+            # minutes before it has anything to watch just teaches you to
+            # ignore its alerts, which defeats the point of having one.
+            echo "::notice::BACKEND_URL is not set yet — skipping. Set it under"
+            echo "Settings > Secrets and variables > Actions > Variables to start monitoring."
+            exit 0
           fi
 
           echo "Checking $URL/health"
