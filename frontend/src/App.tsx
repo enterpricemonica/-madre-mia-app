@@ -24,6 +24,8 @@ function getTableNumberFromUrl() {
 
 // URL base del backend. En local: localhost. En producción (Vercel):
 // se define la variable VITE_API_URL con la URL real de Railway.
+import { cartTotal, cartItemCount, canAddToCart, tipAmount, maxTip as maxTipFor } from './cart'
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 // Convierte "Bebidas Frías" en "Bebidas-Frías" para usarlo como id (sin espacios)
@@ -111,10 +113,10 @@ function App() {
   // Agregar 1 unidad de un item al carrito
   function addToCart(itemId: number) {
     const item = menu.find((m) => m.id === itemId)
-    const current = cart[itemId] || 0
-    // Inventario (M10): si el plato tiene stock limitado, no dejar pasar de lo disponible.
-    if (item && item.stock !== null && current >= item.stock) {
-      toast(item.stock <= 0 ? 'Agotado' : `Solo quedan ${item.stock}`, 'error')
+    // Inventario (M10): la regla vive en cart.ts y está probada allí.
+    const check = canAddToCart(item, cart)
+    if (!check.ok) {
+      toast(check.reason === 'sold-out' ? 'Agotado' : `Solo quedan ${check.remaining}`, 'error')
       return
     }
     setCart((prev) => ({
@@ -123,14 +125,9 @@ function App() {
     }))
   }
 
-  // Calcular total y cantidad de items recorriendo el menú
-  let total = 0
-  let itemCount = 0
-  for (const item of menu) {
-    const quantity = cart[item.id] || 0
-    total += item.price * quantity
-    itemCount += quantity
-  }
+  // Total y cantidad — la aritmética vive en cart.ts, probada aparte.
+  const total = cartTotal(menu, cart)
+  const itemCount = cartItemCount(menu, cart)
 
   // Lista de categorías únicas (Entradas, Platos fuertes, Bebidas...)
   // new Set() elimina los repetidos; el [...] lo vuelve lista de nuevo.
@@ -181,11 +178,7 @@ function App() {
   // para no pasarnos del máximo que valida el backend (order.total // 10).
   function getTipAmount(): number {
     if (!order) return 0
-    const maxTip = Math.floor(order.total * 0.1)
-    if (tipChoice === 'p5') return Math.floor(order.total * 0.05)
-    if (tipChoice === 'p10') return maxTip
-    if (tipChoice === 'other') return Math.min(Math.max(customTip, 0), maxTip)
-    return 0 // 'none' o aún sin elegir
+    return tipAmount(order.total, tipChoice, customTip)
   }
 
   function payWithWompi() {
@@ -360,7 +353,7 @@ function App() {
       {order && total === 0 && (() => {
         const tip = getTipAmount()
         const totalToPay = order.total + tip
-        const maxTip = Math.floor(order.total * 0.1)
+        const maxTip = maxTipFor(order.total)
         return (
         <footer className="cart-bar tip-bar">
           <div className="tip-section">
