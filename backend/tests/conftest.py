@@ -4,6 +4,15 @@ Configuración de pruebas.
 Idea clave: NO tocamos la base de datos real. Cada test corre contra una
 SQLite EN MEMORIA, recién creada y desechada al terminar. Reemplazamos la
 dependencia `get_db` de la app por una sesión apuntando a esa SQLite.
+
+Las pruebas usan la app REAL (`main.app`), no una copia armada aquí. Antes se
+construía una app paralela con unos cuantos routers, porque importar `main`
+tocaba la base de datos al momento de importarse. Eso dejaba sin cubrir el
+CORS, el registro de routers y cualquier ruta declarada sobre `app`. Desde que
+esa preparación vive en el `lifespan`, importar `main` es seguro.
+
+`TestClient(app)` sin `with` NO ejecuta el lifespan, así que las pruebas nunca
+crean tablas ni siembran el admin en la base real.
 """
 import os
 import sys
@@ -27,6 +36,7 @@ from routers import payments as payments_router  # noqa: E402
 from routers import reports as reports_router  # noqa: E402
 from routers import health as health_router  # noqa: E402
 from auth import get_current_user  # noqa: E402
+import main  # noqa: E402  (seguro de importar: no toca la BD hasta el lifespan)
 
 
 @pytest.fixture()
@@ -48,14 +58,15 @@ def db_session():
 
 
 def _build_app(db_session, auth=True):
-    """Arma una app de prueba con los routers reales y get_db apuntando a la SQLite.
-    Si auth=True, saltamos el login (simulamos un admin) para probar rutas protegidas."""
-    app = FastAPI()
-    app.include_router(menu_router.router)
-    app.include_router(orders_router.router)
-    app.include_router(payments_router.router)
-    app.include_router(reports_router.router)
-    app.include_router(health_router.router)
+    """Devuelve un cliente sobre la app REAL, con get_db apuntando a la SQLite.
+
+    `main.app` es un objeto único compartido por todas las pruebas, así que las
+    sustituciones se limpian antes de cada una: si quedaran de la prueba
+    anterior, una prueba podría pasar por la sesión equivocada o por un admin
+    simulado que no pidió.
+    """
+    app = main.app
+    app.dependency_overrides.clear()
 
     def override_get_db():
         yield db_session

@@ -1,12 +1,11 @@
 import os
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
 import models
 from routers import menu, tables, orders, auth, settings, payments, reports, health
-
-# Automatically create all tables in PostgreSQL
-Base.metadata.create_all(bind=engine)
 
 
 # Mini-migración: agrega columnas nuevas a tablas que ya existen (idempotente).
@@ -28,9 +27,6 @@ def ensure_columns():
         conn.commit()
 
 
-ensure_columns()
-
-
 # Create the admin user on startup from env vars (only if it doesn't exist yet)
 def seed_admin():
     username = os.getenv("ADMIN_USERNAME")
@@ -49,15 +45,55 @@ def seed_admin():
         db.close()
 
 
-seed_admin()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Prepare the database when the server STARTS, not when this module is imported.
 
-app = FastAPI(title="Madre Mia API", version="1.0")
+    These three calls used to run at import time, which meant `import main`
+    connected to whatever database the environment pointed at and altered it.
+    That made the real app impossible to import from a test, so the test suite
+    built a parallel app out of routers instead — and therefore never covered
+    the CORS policy, the router wiring, or any route declared on `app` itself.
 
-# CORS — allow external connections (e.g. the customer's phone) during development
+    Moving them here keeps the behaviour identical in production (Uvicorn runs
+    the lifespan on boot) while making the module safe to import.
+    """
+    Base.metadata.create_all(bind=engine)
+    ensure_columns()
+    seed_admin()
+    yield
+
+
+app = FastAPI(title="Madre Mia API", version="1.0", lifespan=lifespan)
+
+# --- CORS ---
+#
+# `allow_origins=["*"]` together with `allow_credentials=True` is a trap. Starlette
+# does not send a literal "*" in that case: it echoes back whatever Origin the
+# request carried, alongside `Allow-Credentials: true`. The result is that every
+# website on the internet holds an authenticated grant to this API.
+#
+# Today the damage is limited because auth is a Bearer token in a header, and one
+# site cannot read another's localStorage. But the day anyone moves the token to a
+# cookie — an ordinary change — the API becomes trivially exploitable, silently.
+#
+# So the two settings are derived together and cannot be combined dangerously:
+# a wildcard never carries credentials, and credentials require an explicit list.
+_origins_env = os.getenv("ALLOWED_ORIGINS", "").strip()
+if _origins_env:
+    ALLOWED_ORIGINS = [o.strip() for o in _origins_env.split(",") if o.strip()]
+    ALLOW_CREDENTIALS = True      # an explicit allowlist can safely carry credentials
+else:
+    # No allowlist configured: stay open so a forgotten env var never takes the
+    # restaurant offline, but refuse credentials so the grant is worthless to a
+    # third-party site.
+    ALLOWED_ORIGINS = ["*"]
+    ALLOW_CREDENTIALS = False
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=ALLOW_CREDENTIALS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
